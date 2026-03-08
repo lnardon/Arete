@@ -6,10 +6,64 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/lnardon/arete/internal/api"
+	"github.com/lnardon/arete/internal/api/handlers"
+	"github.com/lnardon/arete/internal/config"
+	"github.com/lnardon/arete/internal/database"
+	"github.com/lnardon/arete/internal/repository"
 )
+
+func resolveStaticDir(staticDir string) string {
+	if staticDir == "" {
+		return ""
+	}
+
+	relPath := filepath.FromSlash(staticDir)
+	if filepath.IsAbs(staticDir) {
+		if info, err := os.Stat(staticDir); err == nil && info.IsDir() {
+			return staticDir
+		}
+		return ""
+	}
+
+	if cwd, err := os.Getwd(); err == nil {
+		dir := cwd
+		for i := 0; i < 10; i++ {
+			try := filepath.Join(dir, relPath)
+			if info, err := os.Stat(try); err == nil && info.IsDir() {
+				return try
+			}
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dir = parent
+		}
+	}
+
+	execPath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+
+	dir := filepath.Dir(execPath)
+	for i := 0; i < 10; i++ {
+		try := filepath.Join(dir, relPath)
+		if info, err := os.Stat(try); err == nil && info.IsDir() {
+			return try
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return ""
+}
 
 func main() {
 	cfg, err := config.Load()
@@ -17,28 +71,29 @@ func main() {
 		log.Fatal("Failed to load configuration:", err)
 	}
 
-	// Databases
-	// db, err := postgres.New(cfg.Database)
-	// if err != nil {
-	// 	log.Fatal("Failed to connect to database:", err)
-	// }
-	// defer db.Close()
+	staticDir := resolveStaticDir(cfg.Server.StaticDir)
+	if cfg.Server.StaticDir != "" && staticDir == "" {
+		log.Printf("WARNING: static dir %q not found; frontend will 404", cfg.Server.StaticDir)
+	} else if staticDir != "" {
+		log.Printf("Serving frontend from %s", staticDir)
+	}
 
-	// cache, err := redis.New(cfg.Redis)
-	// if err != nil {
-	// 	log.Fatal("Failed to connect to Redis:", err)
-	// }
-	// defer cache.Close()
+	db, err := database.New(cfg.Database)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	defer db.Close()
 
-	// Repositories
+	repo := repository.NewHabitRepository(db)
+	habitHandler := handlers.NewHabitHandler(repo)
+	completionHandler := handlers.NewCompletionHandler(repo)
 
-	// Services
-
-	// Router
 	router := api.NewRouter(api.RouterConfig{
+		StaticDir:         staticDir,
+		HabitHandler:      habitHandler,
+		CompletionHandler: completionHandler,
 	})
 
-	// Server
 	server := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
 		Handler:      router,
@@ -54,7 +109,6 @@ func main() {
 		}
 	}()
 
-	// Requests have 30 seconds to complete before shutdown when command is given
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -62,6 +116,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}
