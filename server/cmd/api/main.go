@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/lnardon/arete/internal/api"
 	"github.com/lnardon/arete/internal/api/handlers"
+	"github.com/lnardon/arete/internal/api/middleware"
 	"github.com/lnardon/arete/internal/auth"
 	"github.com/lnardon/arete/internal/config"
 	"github.com/lnardon/arete/internal/database"
@@ -69,6 +71,8 @@ func resolveStaticDir(staticDir string) string {
 }
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal("Failed to load configuration:", err)
@@ -95,6 +99,8 @@ func main() {
 	completionHandler := handlers.NewCompletionHandler(habitRepo)
 	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
 
+	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
+
 	router := api.NewRouter(api.RouterConfig{
 		StaticDir:         staticDir,
 		HabitHandler:      habitHandler,
@@ -102,6 +108,7 @@ func main() {
 		AuthHandler:       authHandler,
 		AuthService:       authSvc,
 		AllowedOrigin:     cfg.App.AppDomain,
+		RateLimiter:       rateLimiter,
 	})
 
 	server := &http.Server{

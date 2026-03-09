@@ -18,6 +18,7 @@ type RouterConfig struct {
 	AuthHandler       *handlers.AuthHandler
 	AuthService       *auth.Service
 	AllowedOrigin     string
+	RateLimiter       *middleware.RateLimiter
 }
 
 // Serves static files and falls back to index.html for SPA client-side routes.
@@ -39,12 +40,22 @@ func spaHandler(staticDir string) http.Handler {
 	})
 }
 
+func bodyLimit(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1 MB
+		next.ServeHTTP(w, r)
+	})
+}
+
 func NewRouter(config RouterConfig) http.Handler {
 	r := mux.NewRouter()
+	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.CORS(config.AllowedOrigin))
 	r.Use(middleware.Logging)
+	r.Use(bodyLimit)
 
 	jwtMiddleware := middleware.JWT(config.AuthService)
+	rateLimitMiddleware := middleware.RateLimit(config.RateLimiter)
 
 	// Public routes
 	public := r.PathPrefix("/api/v1").Subrouter()
@@ -53,8 +64,8 @@ func NewRouter(config RouterConfig) http.Handler {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"healthy"}`))
 	}).Methods("GET")
-	public.HandleFunc("/auth/register", config.AuthHandler.Register).Methods("POST")
-	public.HandleFunc("/auth/login", config.AuthHandler.Login).Methods("POST")
+	public.Handle("/auth/register", rateLimitMiddleware(http.HandlerFunc(config.AuthHandler.Register))).Methods("POST")
+	public.Handle("/auth/login", rateLimitMiddleware(http.HandlerFunc(config.AuthHandler.Login))).Methods("POST")
 	public.HandleFunc("/auth/logout", config.AuthHandler.Logout).Methods("POST")
 
 	// Protected routes
