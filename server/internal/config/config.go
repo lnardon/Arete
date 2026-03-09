@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -84,6 +85,10 @@ func Load() (*Config, error) {
 			AppDomain:    getEnv("APP_DOMAIN", "http://localhost:5173"),
 			CookieSecure: getEnvAsBool("COOKIE_SECURE", true),
 		},
+	}
+
+	if len(config.JWT.SecretKey) < 32 {
+		return nil, fmt.Errorf("JWT_SECRET must be at least 32 characters (got %d)", len(config.JWT.SecretKey))
 	}
 
 	return config, nil
