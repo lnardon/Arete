@@ -1,5 +1,12 @@
 import type { Habit, HabitCompletion } from '@/lib/types'
 
+export class ApiError extends Error {
+  constructor(public readonly status: number) {
+    super('Request failed')
+    this.name = 'ApiError'
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...options,
@@ -8,9 +15,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   })
   if (res.status === 401) {
     window.dispatchEvent(new Event('auth:unauthorized'))
-    throw new Error(`HTTP ${res.status}: ${path}`)
+    throw new ApiError(res.status)
   }
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`)
+  if (!res.ok) throw new ApiError(res.status)
   if (res.status === 204) return undefined as T
   return res.json()
 }

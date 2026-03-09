@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { api } from '@/lib/api-client'
+import { api, ApiError } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +27,7 @@ function SignupPage() {
       login({ userId: data.userId, username: data.username })
       navigate({ to: '/' })
     } catch (err: unknown) {
-      if (err instanceof Error && err.message.includes('409')) {
+      if (err instanceof ApiError && err.status === 409) {
         toast.error('Username already taken')
       } else {
         toast.error('Something went wrong')
