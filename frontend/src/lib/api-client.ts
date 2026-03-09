@@ -2,9 +2,14 @@ import type { Habit, HabitCompletion } from '@/lib/types'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    credentials: 'include',
   })
+  if (res.status === 401) {
+    window.dispatchEvent(new Event('auth:unauthorized'))
+    throw new Error(`HTTP ${res.status}: ${path}`)
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`)
   if (res.status === 204) return undefined as T
   return res.json()
@@ -31,5 +36,21 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ habitId, date }),
       }),
+  },
+  auth: {
+    register: (username: string, password: string) =>
+      request<{ userId: string; username: string }>('/api/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      }),
+    login: (username: string, password: string) =>
+      request<{ userId: string; username: string }>('/api/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      }),
+    logout: () =>
+      request<void>('/api/v1/auth/logout', { method: 'POST' }),
+    me: () =>
+      request<{ userId: string; username: string }>('/api/v1/auth/me'),
   },
 }

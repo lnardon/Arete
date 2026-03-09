@@ -8,7 +8,7 @@ import { HabitBreakdown } from "@/components/habit-breakdown"
 import { useHabits } from "@/hooks/use-habits"
 import { useCompletionsForRange } from "@/hooks/use-completions"
 
-export const Route = createFileRoute('/statistics/')({
+export const Route = createFileRoute('/_app/statistics')({
   component: StatisticsPage,
 })
 

@@ -8,7 +8,7 @@ import { useHabits } from "@/hooks/use-habits"
 import { useCompletionsForRange } from "@/hooks/use-completions"
 import { computeAchievements } from "@/lib/achievements"
 
-export const Route = createFileRoute('/achievements/')({
+export const Route = createFileRoute('/_app/achievements')({
   component: AchievementsPage,
 })
 
