@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"regexp"
 
 	"github.com/lnardon/arete/internal/auth"
 	"github.com/lnardon/arete/internal/repository"
 )
+
+var dateRegex = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 type CompletionHandler struct {
 	repo *repository.HabitRepository
@@ -25,7 +28,7 @@ func (h *CompletionHandler) GetCompletions(w http.ResponseWriter, r *http.Reques
 	}
 
 	date := r.URL.Query().Get("date")
-	if date == "" {
+	if date == "" || !dateRegex.MatchString(date) {
 		http.Error(w, "date query param required (YYYY-MM-DD)", http.StatusBadRequest)
 		return
 	}
@@ -47,7 +50,7 @@ func (h *CompletionHandler) GetCompletionsRange(w http.ResponseWriter, r *http.R
 
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
-	if start == "" || end == "" {
+	if start == "" || !dateRegex.MatchString(start) || end == "" || !dateRegex.MatchString(end) {
 		http.Error(w, "start and end query params required (YYYY-MM-DD)", http.StatusBadRequest)
 		return
 	}
@@ -73,6 +76,10 @@ func (h *CompletionHandler) ToggleCompletion(w http.ResponseWriter, r *http.Requ
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.HabitID == "" || body.Date == "" {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if !dateRegex.MatchString(body.Date) {
+		http.Error(w, "date must be in YYYY-MM-DD format", http.StatusBadRequest)
 		return
 	}
 

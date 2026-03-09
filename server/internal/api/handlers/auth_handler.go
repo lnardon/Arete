@@ -31,6 +31,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "username and password are required", http.StatusBadRequest)
 		return
 	}
+	if len(body.Username) > 50 {
+		http.Error(w, "username must be 50 characters or fewer", http.StatusBadRequest)
+		return
+	}
+	if len(body.Password) < 8 || len(body.Password) > 72 {
+		http.Error(w, "password must be between 8 and 72 characters", http.StatusBadRequest)
+		return
+	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 	if err != nil {

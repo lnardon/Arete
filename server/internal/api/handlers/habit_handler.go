@@ -47,6 +47,10 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
+	if len(body.Name) > 200 {
+		http.Error(w, "habit name must be 200 characters or fewer", http.StatusBadRequest)
+		return
+	}
 
 	habit, err := h.repo.CreateHabit(r.Context(), authUser.ID, body.Name)
 	if err != nil {
@@ -69,6 +73,10 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Name == "" {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if len(body.Name) > 200 {
+		http.Error(w, "habit name must be 200 characters or fewer", http.StatusBadRequest)
 		return
 	}
 
