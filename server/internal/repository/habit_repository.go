@@ -16,8 +16,11 @@ func NewHabitRepository(db *database.DB) *HabitRepository {
 	return &HabitRepository{db: db}
 }
 
-func (r *HabitRepository) ListHabits(ctx context.Context) ([]models.Habit, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id, name, created_at FROM habits ORDER BY created_at ASC`)
+func (r *HabitRepository) ListHabits(ctx context.Context, userID string) ([]models.Habit, error) {
+	rows, err := r.db.QueryContext(ctx,
+		`SELECT id, name, created_at FROM habits WHERE user_id = $1 ORDER BY created_at ASC`,
+		userID,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -31,36 +34,42 @@ func (r *HabitRepository) ListHabits(ctx context.Context) ([]models.Habit, error
 		}
 		habits = append(habits, h)
 	}
+
 	if habits == nil {
 		habits = []models.Habit{}
 	}
+
 	return habits, rows.Err()
 }
 
-func (r *HabitRepository) CreateHabit(ctx context.Context, name string) (models.Habit, error) {
+func (r *HabitRepository) CreateHabit(ctx context.Context, userID, name string) (models.Habit, error) {
 	var h models.Habit
 	err := r.db.QueryRowContext(ctx,
-		`INSERT INTO habits (name) VALUES ($1) RETURNING id, name, created_at`,
-		name,
+		`INSERT INTO habits (user_id, name) VALUES ($1, $2) RETURNING id, name, created_at`,
+		userID, name,
 	).Scan(&h.ID, &h.Name, &h.CreatedAt)
 	return h, err
 }
 
-func (r *HabitRepository) UpdateHabit(ctx context.Context, id string, name string) (models.Habit, error) {
+func (r *HabitRepository) UpdateHabit(ctx context.Context, userID, id, name string) (models.Habit, error) {
 	var h models.Habit
 	err := r.db.QueryRowContext(ctx,
-		`UPDATE habits SET name = $1 WHERE id = $2 RETURNING id, name, created_at`,
-		name, id,
+		`UPDATE habits SET name = $1 WHERE id = $2 AND user_id = $3 RETURNING id, name, created_at`,
+		name, id, userID,
 	).Scan(&h.ID, &h.Name, &h.CreatedAt)
 
 	if err == sql.ErrNoRows {
 		return h, ErrNotFound
 	}
+
 	return h, err
 }
 
-func (r *HabitRepository) DeleteHabit(ctx context.Context, id string) error {
-	result, err := r.db.ExecContext(ctx, `DELETE FROM habits WHERE id = $1`, id)
+func (r *HabitRepository) DeleteHabit(ctx context.Context, userID, id string) error {
+	result, err := r.db.ExecContext(ctx,
+		`DELETE FROM habits WHERE id = $1 AND user_id = $2`,
+		id, userID,
+	)
 	if err != nil {
 		return err
 	}
@@ -77,10 +86,12 @@ func (r *HabitRepository) DeleteHabit(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *HabitRepository) GetCompletionsForDate(ctx context.Context, date string) ([]models.HabitCompletion, error) {
+func (r *HabitRepository) GetCompletionsForDate(ctx context.Context, userID, date string) ([]models.HabitCompletion, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT habit_id, date::text FROM habit_completions WHERE date = $1`,
-		date,
+		`SELECT hc.habit_id, hc.date::text FROM habit_completions hc
+		 JOIN habits h ON h.id = hc.habit_id
+		 WHERE hc.date = $1 AND h.user_id = $2`,
+		date, userID,
 	)
 	if err != nil {
 		return nil, err
@@ -98,13 +109,17 @@ func (r *HabitRepository) GetCompletionsForDate(ctx context.Context, date string
 	if completions == nil {
 		completions = []models.HabitCompletion{}
 	}
+
 	return completions, rows.Err()
 }
 
-func (r *HabitRepository) GetCompletionsForRange(ctx context.Context, startDate, endDate string) ([]models.HabitCompletion, error) {
+func (r *HabitRepository) GetCompletionsForRange(ctx context.Context, userID, startDate, endDate string) ([]models.HabitCompletion, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT habit_id, date::text FROM habit_completions WHERE date >= $1 AND date <= $2 ORDER BY date ASC`,
-		startDate, endDate,
+		`SELECT hc.habit_id, hc.date::text FROM habit_completions hc
+		 JOIN habits h ON h.id = hc.habit_id
+		 WHERE hc.date >= $1 AND hc.date <= $2 AND h.user_id = $3
+		 ORDER BY hc.date ASC`,
+		startDate, endDate, userID,
 	)
 	if err != nil {
 		return nil, err
@@ -122,10 +137,25 @@ func (r *HabitRepository) GetCompletionsForRange(ctx context.Context, startDate,
 	if completions == nil {
 		completions = []models.HabitCompletion{}
 	}
+
 	return completions, rows.Err()
 }
 
-func (r *HabitRepository) ToggleCompletion(ctx context.Context, habitID string, date string) error {
+func (r *HabitRepository) ToggleCompletion(ctx context.Context, userID, habitID, date string) error {
+	// Verify ownership before toggling
+	var count int
+	err := r.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM habits WHERE id = $1 AND user_id = $2`,
+		habitID, userID,
+	).Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return ErrNotFound
+	}
+
 	result, err := r.db.ExecContext(ctx,
 		`INSERT INTO habit_completions (habit_id, date) VALUES ($1, $2) ON CONFLICT (habit_id, date) DO NOTHING`,
 		habitID, date,
