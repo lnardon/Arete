@@ -1,8 +1,10 @@
 import type { Habit, HabitCompletion } from '@/lib/types'
 
 export class ApiError extends Error {
-  constructor(public readonly status: number) {
+  readonly status: number
+  constructor(status: number) {
     super('Request failed')
+    this.status = status
     this.name = 'ApiError'
   }
 }
