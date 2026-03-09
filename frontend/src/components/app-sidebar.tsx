@@ -2,6 +2,7 @@ import { BarChart3, LayoutDashboard, Trophy } from "lucide-react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import { SignOutButton } from "@/components/sign-out-button"
 
 const navItems = [
   { icon: LayoutDashboard, label: "Today", href: "/" },
@@ -66,6 +67,7 @@ export function AppSidebar() {
 
       <div className="px-4 py-4 border-t border-sidebar-border space-y-3">
         <ThemeSwitcher variant="sidebar" />
+        <SignOutButton variant="sidebar" />
         <div className="px-2">
           <p className="text-[11px] text-sidebar-foreground/45 leading-relaxed">
             {"\"We are what we repeatedly do.\""}

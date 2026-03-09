@@ -12,6 +12,7 @@ import (
 
 	"github.com/lnardon/arete/internal/api"
 	"github.com/lnardon/arete/internal/api/handlers"
+	"github.com/lnardon/arete/internal/auth"
 	"github.com/lnardon/arete/internal/config"
 	"github.com/lnardon/arete/internal/database"
 	"github.com/lnardon/arete/internal/repository"
@@ -37,6 +38,7 @@ func resolveStaticDir(staticDir string) string {
 			if info, err := os.Stat(try); err == nil && info.IsDir() {
 				return try
 			}
+
 			parent := filepath.Dir(dir)
 			if parent == dir {
 				break
@@ -56,6 +58,7 @@ func resolveStaticDir(staticDir string) string {
 		if info, err := os.Stat(try); err == nil && info.IsDir() {
 			return try
 		}
+
 		parent := filepath.Dir(dir)
 		if parent == dir {
 			break
@@ -84,14 +87,21 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := repository.NewHabitRepository(db)
-	habitHandler := handlers.NewHabitHandler(repo)
-	completionHandler := handlers.NewCompletionHandler(repo)
+	habitRepo := repository.NewHabitRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
+
+	habitHandler := handlers.NewHabitHandler(habitRepo)
+	completionHandler := handlers.NewCompletionHandler(habitRepo)
+	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
 
 	router := api.NewRouter(api.RouterConfig{
 		StaticDir:         staticDir,
 		HabitHandler:      habitHandler,
 		CompletionHandler: completionHandler,
+		AuthHandler:       authHandler,
+		AuthService:       authSvc,
+		AllowedOrigin:     cfg.App.AppDomain,
 	})
 
 	server := &http.Server{

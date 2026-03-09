@@ -47,7 +47,21 @@ func runMigrations(db *sql.DB, dbName string) error {
 		return err
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil {
+		if err == migrate.ErrNoChange {
+			return nil
+		}
+		// If a previous run left the database dirty, force back to the last
+		// good version and retry so the fixed migration can be re-applied.
+		if dirtyErr, ok := err.(migrate.ErrDirty); ok {
+			if forceErr := m.Force(dirtyErr.Version - 1); forceErr != nil {
+				return fmt.Errorf("force version after dirty state: %w", forceErr)
+			}
+			if upErr := m.Up(); upErr != nil && upErr != migrate.ErrNoChange {
+				return upErr
+			}
+			return nil
+		}
 		return err
 	}
 	return nil

@@ -9,85 +9,176 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as StatisticsIndexRouteImport } from './routes/statistics/index'
-import { Route as AchievementsIndexRouteImport } from './routes/achievements/index'
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as AuthLoginRouteImport } from './routes/_auth.login'
+import { Route as AuthSignupRouteImport } from './routes/_auth.signup'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppStatisticsRouteImport } from './routes/_app.statistics'
+import { Route as AppAchievementsRouteImport } from './routes/_app.achievements'
+
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/_auth/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/_auth/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/_app/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const StatisticsIndexRoute = StatisticsIndexRouteImport.update({
-  id: '/statistics/',
-  path: '/statistics/',
-  getParentRoute: () => rootRouteImport,
+
+const AppStatisticsRoute = AppStatisticsRouteImport.update({
+  id: '/_app/statistics',
+  path: '/statistics',
+  getParentRoute: () => AppRoute,
 } as any)
-const AchievementsIndexRoute = AchievementsIndexRouteImport.update({
-  id: '/achievements/',
-  path: '/achievements/',
-  getParentRoute: () => rootRouteImport,
+
+const AppAchievementsRoute = AppAchievementsRouteImport.update({
+  id: '/_app/achievements',
+  path: '/achievements',
+  getParentRoute: () => AppRoute,
 } as any)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/achievements/': typeof AchievementsIndexRoute
-  '/statistics/': typeof StatisticsIndexRoute
+  '/': typeof AppIndexRoute
+  '/statistics': typeof AppStatisticsRoute
+  '/achievements': typeof AppAchievementsRoute
+  '/login': typeof AuthLoginRoute
+  '/signup': typeof AuthSignupRoute
 }
+
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/achievements': typeof AchievementsIndexRoute
-  '/statistics': typeof StatisticsIndexRoute
+  '/': typeof AppIndexRoute
+  '/statistics': typeof AppStatisticsRoute
+  '/achievements': typeof AppAchievementsRoute
+  '/login': typeof AuthLoginRoute
+  '/signup': typeof AuthSignupRoute
 }
+
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/achievements/': typeof AchievementsIndexRoute
-  '/statistics/': typeof StatisticsIndexRoute
+  '/_auth': typeof AuthRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/signup': typeof AuthSignupRoute
+  '/_app': typeof AppRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/statistics': typeof AppStatisticsRoute
+  '/_app/achievements': typeof AppAchievementsRoute
 }
+
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/achievements/' | '/statistics/'
+  fullPaths: '/' | '/statistics' | '/achievements' | '/login' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/achievements' | '/statistics'
-  id: '__root__' | '/' | '/achievements/' | '/statistics/'
+  to: '/' | '/statistics' | '/achievements' | '/login' | '/signup'
+  id: '__root__' | '/_auth' | '/_auth/login' | '/_auth/signup' | '/_app' | '/_app/' | '/_app/statistics' | '/_app/achievements'
   fileRoutesById: FileRoutesById
 }
+
+export interface AuthRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+}
+
+export interface AppRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
+  AppStatisticsRoute: typeof AppStatisticsRoute
+  AppAchievementsRoute: typeof AppAchievementsRoute
+}
+
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AchievementsIndexRoute: typeof AchievementsIndexRoute
-  StatisticsIndexRoute: typeof StatisticsIndexRoute
+  AuthRoute: typeof AuthRoute
+  AppRoute: typeof AppRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRouteImport
+    }
+    '/_auth/signup': {
+      id: '/_auth/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteImport
     }
-    '/statistics/': {
-      id: '/statistics/'
+    '/_app/statistics': {
+      id: '/_app/statistics'
       path: '/statistics'
-      fullPath: '/statistics/'
-      preLoaderRoute: typeof StatisticsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/statistics'
+      preLoaderRoute: typeof AppStatisticsRouteImport
+      parentRoute: typeof AppRouteImport
     }
-    '/achievements/': {
-      id: '/achievements/'
+    '/_app/achievements': {
+      id: '/_app/achievements'
       path: '/achievements'
-      fullPath: '/achievements/'
-      preLoaderRoute: typeof AchievementsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AppAchievementsRouteImport
+      parentRoute: typeof AppRouteImport
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AchievementsIndexRoute: AchievementsIndexRoute,
-  StatisticsIndexRoute: StatisticsIndexRoute,
+const authRouteChildren: AuthRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignupRoute: AuthSignupRoute,
 }
+
+const appRouteChildren: AppRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
+  AppStatisticsRoute: AppStatisticsRoute,
+  AppAchievementsRoute: AppAchievementsRoute,
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthRoute: AuthRoute._addFileChildren(authRouteChildren),
+  AppRoute: AppRoute._addFileChildren(appRouteChildren),
+}
+
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()

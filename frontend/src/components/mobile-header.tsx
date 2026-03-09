@@ -3,6 +3,7 @@
 import { Link } from "@tanstack/react-router"
 import { Home, BarChart2, Trophy } from "lucide-react"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import { SignOutButton } from "@/components/sign-out-button"
 
 export function MobileHeader() {
   return (
@@ -56,7 +57,10 @@ export function MobileHeader() {
           <Trophy className="w-4 h-4" />
         </Link>
       </nav>
-      <ThemeSwitcher variant="header" />
+      <div className="flex items-center gap-1">
+        <ThemeSwitcher variant="header" />
+        <SignOutButton variant="header" />
+      </div>
     </header>
   )
 }

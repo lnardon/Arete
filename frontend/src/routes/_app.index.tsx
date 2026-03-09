@@ -3,10 +3,9 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { MobileHeader } from "@/components/mobile-header"
 import { HabitList } from "@/components/habit-list"
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_app/')({
   component: AppPage,
 })
-
 
 export default function AppPage() {
   return (
@@ -19,4 +18,3 @@ export default function AppPage() {
     </div>
   )
 }
-

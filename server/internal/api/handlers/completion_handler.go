@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/lnardon/arete/internal/auth"
 	"github.com/lnardon/arete/internal/repository"
 )
 
@@ -16,13 +18,19 @@ func NewCompletionHandler(repo *repository.HabitRepository) *CompletionHandler {
 }
 
 func (h *CompletionHandler) GetCompletions(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
 	date := r.URL.Query().Get("date")
 	if date == "" {
 		http.Error(w, "date query param required (YYYY-MM-DD)", http.StatusBadRequest)
 		return
 	}
-	
-	completions, err := h.repo.GetCompletionsForDate(r.Context(), date)
+
+	completions, err := h.repo.GetCompletionsForDate(r.Context(), authUser.ID, date)
 	if err != nil {
 		http.Error(w, "failed to get completions", http.StatusInternalServerError)
 		return
@@ -31,6 +39,12 @@ func (h *CompletionHandler) GetCompletions(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *CompletionHandler) GetCompletionsRange(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
 	if start == "" || end == "" {
@@ -38,7 +52,7 @@ func (h *CompletionHandler) GetCompletionsRange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	completions, err := h.repo.GetCompletionsForRange(r.Context(), start, end)
+	completions, err := h.repo.GetCompletionsForRange(r.Context(), authUser.ID, start, end)
 	if err != nil {
 		http.Error(w, "failed to get completions", http.StatusInternalServerError)
 		return
@@ -47,6 +61,12 @@ func (h *CompletionHandler) GetCompletionsRange(w http.ResponseWriter, r *http.R
 }
 
 func (h *CompletionHandler) ToggleCompletion(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
 	var body struct {
 		HabitID string `json:"habitId"`
 		Date    string `json:"date"`
@@ -56,7 +76,11 @@ func (h *CompletionHandler) ToggleCompletion(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := h.repo.ToggleCompletion(r.Context(), body.HabitID, body.Date); err != nil {
+	if err := h.repo.ToggleCompletion(r.Context(), authUser.ID, body.HabitID, body.Date); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			http.Error(w, "habit not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "failed to toggle completion", http.StatusInternalServerError)
 		return
 	}

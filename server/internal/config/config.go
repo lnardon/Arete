@@ -45,8 +45,10 @@ type JWTConfig struct {
 }
 
 type AppConfig struct {
-	Environment string
-	Debug       bool
+	Environment  string
+	Debug        bool
+	AppDomain    string
+	CookieSecure bool
 }
 
 func Load() (*Config, error) {
@@ -77,8 +79,10 @@ func Load() (*Config, error) {
 			ExpiresIn: getEnvAsInt("JWT_EXPIRES_IN", 24),
 		},
 		App: AppConfig{
-			Environment: getEnv("ENV", "development"),
-			Debug:       getEnvAsBool("DEBUG", false),
+			Environment:  getEnv("ENV", "development"),
+			Debug:        getEnvAsBool("DEBUG", false),
+			AppDomain:    getEnv("APP_DOMAIN", "http://localhost:5173"),
+			CookieSecure: getEnvAsBool("COOKIE_SECURE", true),
 		},
 	}
 

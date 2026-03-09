@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 import { routeTree } from './routeTree.gen'
 import { ThemeProvider } from './components/theme-provider'
+import { AuthProvider, useAuth } from './lib/auth'
 import reportWebVitals from './reportWebVitals.ts'
 import './index.css'
 
@@ -12,6 +13,7 @@ const router = createRouter({
   routeTree,
   context: {
     ...TanStackQueryProviderContext,
+    auth: undefined!,
   },
   defaultPreload: 'intent',
   scrollRestoration: true,
@@ -25,6 +27,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+function App() {
+  const auth = useAuth()
+  return (
+    <RouterProvider
+      router={router}
+      context={{ ...TanStackQueryProviderContext, auth }}
+    />
+  )
+}
+
 const rootElement = document.getElementById('root')
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
@@ -32,14 +44,13 @@ if (rootElement && !rootElement.innerHTML) {
     <StrictMode>
       <ThemeProvider>
         <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-          <RouterProvider router={router} />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </TanStackQueryProvider.Provider>
       </ThemeProvider>
     </StrictMode>,
   )
 }
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals()

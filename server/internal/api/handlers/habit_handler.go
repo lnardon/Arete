@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/lnardon/arete/internal/auth"
 	"github.com/lnardon/arete/internal/repository"
 )
 
@@ -18,7 +19,13 @@ func NewHabitHandler(repo *repository.HabitRepository) *HabitHandler {
 }
 
 func (h *HabitHandler) ListHabits(w http.ResponseWriter, r *http.Request) {
-	habits, err := h.repo.ListHabits(r.Context())
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
+	habits, err := h.repo.ListHabits(r.Context(), authUser.ID)
 	if err != nil {
 		http.Error(w, "failed to list habits", http.StatusInternalServerError)
 		return
@@ -27,6 +34,12 @@ func (h *HabitHandler) ListHabits(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
 	var body struct {
 		Name string `json:"name"`
 	}
@@ -35,7 +48,7 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	habit, err := h.repo.CreateHabit(r.Context(), body.Name)
+	habit, err := h.repo.CreateHabit(r.Context(), authUser.ID, body.Name)
 	if err != nil {
 		http.Error(w, "failed to create habit", http.StatusInternalServerError)
 		return
@@ -44,6 +57,12 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
 	id := mux.Vars(r)["id"]
 	var body struct {
 		Name string `json:"name"`
@@ -53,7 +72,7 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	habit, err := h.repo.UpdateHabit(r.Context(), id, body.Name)
+	habit, err := h.repo.UpdateHabit(r.Context(), authUser.ID, id, body.Name)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			http.Error(w, "habit not found", http.StatusNotFound)
@@ -66,13 +85,20 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HabitHandler) DeleteHabit(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
 	id := mux.Vars(r)["id"]
-	err := h.repo.DeleteHabit(r.Context(), id)
+	err := h.repo.DeleteHabit(r.Context(), authUser.ID, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			http.Error(w, "habit not found", http.StatusNotFound)
 			return
 		}
+
 		http.Error(w, "failed to delete habit", http.StatusInternalServerError)
 		return
 	}
