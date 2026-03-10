@@ -38,17 +38,8 @@ export function MobileHeader() {
         to="/"
         className="flex items-center gap-3 hover:opacity-90 transition-opacity"
       >
-        <div className="w-8 h-8 rounded-xl bg-foreground/8 flex items-center justify-center">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            className="w-4 h-4"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <path d="M12 2L4 6v6c0 5.25 3.4 10.15 8 11.25C16.6 22.15 20 17.25 20 12V6l-8-4z" />
-            <path d="M9 12l2 2 4-4" />
-          </svg>
+        <div className="w-10 h-10 rounded-sm bg-foreground/10 flex items-center justify-center">
+          <img src="/logo.png" alt="Arete Logo" className="w-full h-full" />
         </div>
         <div>
           <h1 className="text-sm font-display font-semibold">

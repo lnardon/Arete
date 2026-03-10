@@ -38,7 +38,6 @@ const MONTHS = [
   "Dec",
 ]
 
-const DAYS = ["Mon", "Wed", "Fri"]
 
 interface DayData {
   date: string
@@ -57,7 +56,7 @@ function getIntensityClass(ratio: number, total: number): string {
 }
 
 export function HabitHeatmap({ habits, completions }: { habits: Habit[], completions: HabitCompletion[] }) {
-  const [hoveredDay, setHoveredDay] = useState<DayData | null>(null)
+  const [_, setHoveredDay] = useState<DayData | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -74,8 +73,7 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
     startDate.setDate(startDate.getDate() - 364)
 
     const dayOfWeek = startDate.getDay()
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-    startDate.setDate(startDate.getDate() + mondayOffset)
+    startDate.setDate(startDate.getDate() - dayOfWeek)
 
     const completionsByDate = new Map<string, number>()
     for (const c of completions) {
@@ -105,7 +103,7 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
         monthLabelArr.push({ label: MONTHS[lastMonth], weekIndex })
       }
 
-      if (cursor.getDay() === 0 || cursor.getTime() === today.getTime()) {
+      if (cursor.getDay() === 6 || cursor.getTime() === today.getTime()) {
         weeksArr.push(currentWeek)
         currentWeek = []
         weekIndex++
@@ -144,7 +142,7 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
         </div>
       </div>
 
-      <div ref={scrollRef} className="overflow-x-auto heatmap-scroll">
+      <div ref={scrollRef} className="overflow-x-auto heatmap-scroll pb-4">
         <div className="min-w-[720px]">
           <div className="flex gap-0.5 mb-1 ml-8">
             {monthLabels.map((m, i) => {
@@ -173,13 +171,13 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
                   className="h-[11px] flex items-center justify-end"
                 >
                   <span className="text-[9px] tracking-wider uppercase text-muted-foreground w-6 text-right">
-                    {dayIdx % 2 === 0 ? DAYS[Math.floor(dayIdx / 2)] || "" : ""}
+                    {dayIdx === 0 ? "Sun" : dayIdx === 3 ? "Wed" : dayIdx === 6 ? "Sat" : ""}
                   </span>
                 </div>
               ))}
             </div>
 
-            <TooltipProvider delay={0}>
+            <TooltipProvider delay={1000}>
               <div className="flex gap-0.5">
                 {weeks.map((week, wIdx) => (
                   <div key={wIdx} className="flex flex-col gap-0.5">
@@ -194,7 +192,7 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
                         </TooltipTrigger>
                         <TooltipContent
                           side="top"
-                          className="border border-border bg-popover text-popover-foreground"
+                          className="border border-border bg-popover text-popover-foreground p-2"
                         >
                           <p className="text-xs font-display font-medium">
                             {formatDisplayDate(day.date)}
@@ -217,24 +215,6 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
           </div>
         </div>
       </div>
-
-      {hoveredDay && hoveredDay.total > 0 && (
-        <div className="mt-4 pt-4 border-t border-border flex items-baseline gap-4">
-          <p className="text-xs tracking-wider text-muted-foreground">
-            {formatDisplayDate(hoveredDay.date)}
-          </p>
-          <p className="font-display text-lg font-semibold text-foreground">
-            {hoveredDay.completed}
-            <span className="text-muted-foreground">
-              {" / "}
-              {hoveredDay.total}
-            </span>
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            {Math.round(hoveredDay.ratio * 100)}% fulfilled
-          </p>
-        </div>
-      )}
     </div>
   )
 }

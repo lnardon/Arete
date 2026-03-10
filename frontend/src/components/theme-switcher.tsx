@@ -24,7 +24,7 @@ export function ThemeSwitcher({ className, variant = "sidebar" }: ThemeSwitcherP
       className={cn(
         "shrink-0",
         isSidebar
-          ? "w-full justify-start gap-3 px-3 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          ? "w-full justify-start gap-3 px-3 py-5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           : "text-foreground hover:bg-muted",
         className
       )}
