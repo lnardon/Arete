@@ -1,13 +1,17 @@
 "use client"
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState } from "react"
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 
 interface DateNavigatorProps {
   currentDate: Date
   onPrevious: () => void
   onNext: () => void
   onToday: () => void
+  onDateSelect?: (date: Date) => void
 }
 
 function formatDisplayDate(date: Date): string {
@@ -52,7 +56,10 @@ export function DateNavigator({
   onPrevious,
   onNext,
   onToday,
+  onDateSelect,
 }: DateNavigatorProps) {
+  const [open, setOpen] = useState(false)
+
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -74,6 +81,24 @@ export function DateNavigator({
             Today
           </Button>
         )}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger className="cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-border bg-background hover:bg-muted dark:bg-input/30 dark:border-input dark:hover:bg-input/50 inline-flex items-center justify-center size-8 transition-all focus-visible:ring-3 outline-none">
+            <CalendarIcon className="w-4 h-4" />
+            <span className="sr-only">Pick a date</span>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={currentDate}
+              onSelect={(date) => {
+                if (date) {
+                  onDateSelect?.(date)
+                  setOpen(false)
+                }
+              }}
+            />
+          </PopoverContent>
+        </Popover>
         <Button
           variant="outline"
           size="icon"
