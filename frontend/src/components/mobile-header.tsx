@@ -1,13 +1,39 @@
 "use client"
 
-import { Link } from "@tanstack/react-router"
-import { Home, BarChart2, Trophy } from "lucide-react"
-import { ThemeSwitcher } from "@/components/theme-switcher"
-import { SignOutButton } from "@/components/sign-out-button"
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
+import { Home, BarChart2, Trophy, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { useTheme } from "@/components/theme-provider"
+import { useAuth } from "@/lib/auth"
+import { useQueryClient } from "@tanstack/react-query"
+import { api } from "@/lib/api-client"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function MobileHeader() {
+  const { theme, toggleTheme } = useTheme()
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+
+  const isHome = pathname === "/"
+  const isStats = pathname === "/statistics"
+  const isAchievements = pathname === "/achievements"
+
+  async function handleSignOut() {
+    await api.auth.logout()
+    logout()
+    queryClient.clear()
+    navigate({ to: "/login" })
+  }
+
   return (
-    <header className="flex md:hidden items-center justify-between px-4 py-4 border-b border-border bg-background/80 backdrop-blur-md text-foreground">
+    <header className="flex md:hidden items-center justify-between px-4 py-4 border-b border-border bg-background text-foreground">
       <Link
         to="/"
         className="flex items-center gap-3 hover:opacity-90 transition-opacity"
@@ -33,34 +59,48 @@ export function MobileHeader() {
           </p>
         </div>
       </Link>
-      <nav className="flex items-center gap-1">
-        <Link
-          to="/"
-          activeProps={{ className: "text-foreground bg-accent" }}
-          activeOptions={{ exact: true }}
-          className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Home className="w-4 h-4" />
-        </Link>
-        <Link
-          to="/statistics"
-          activeProps={{ className: "text-foreground bg-accent" }}
-          className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <BarChart2 className="w-4 h-4" />
-        </Link>
-        <Link
-          to="/achievements"
-          activeProps={{ className: "text-foreground bg-accent" }}
-          className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Trophy className="w-4 h-4" />
-        </Link>
-      </nav>
-      <div className="flex items-center gap-1">
-        <ThemeSwitcher variant="header" />
-        <SignOutButton variant="header" />
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="cursor-pointer hover:bg-muted dark:hover:bg-muted/50 inline-flex items-center justify-center size-8 rounded-lg transition-all outline-none">
+          <Menu className="w-5 h-5" />
+          <span className="sr-only">Open menu</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48 text-sm border border-white p-2">
+          <DropdownMenuItem className={isHome ? "font-semibold" : ""}>
+            <Link to="/" className="flex items-center gap-2 w-full">
+              <Home className="w-4 h-4" />
+              Today
+              {isHome && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={isStats ? "font-semibold" : ""}>
+            <Link to="/statistics" className="flex items-center gap-2 w-full">
+              <BarChart2 className="w-4 h-4" />
+              Statistics
+              {isStats && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={isAchievements ? "font-semibold" : ""}>
+            <Link to="/achievements" className="flex items-center gap-2 w-full">
+              <Trophy className="w-4 h-4" />
+              Achievements
+              {isAchievements && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="cursor-pointer" onClick={toggleTheme}>
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4" strokeWidth={1.5} />
+            ) : (
+              <Moon className="w-4 h-4" strokeWidth={1.5} />
+            )}
+            {theme === "dark" ? "Light mode" : "Dark mode"}
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4" strokeWidth={1.5} />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   )
 }

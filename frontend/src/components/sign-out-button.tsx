@@ -25,7 +25,7 @@ export function SignOutButton({ variant = "sidebar" }: SignOutButtonProps) {
     return (
       <button
         onClick={handleSignOut}
-        className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+        className="cursor-pointer p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Sign out"
       >
         <LogOut className="w-4 h-4" />
@@ -37,7 +37,7 @@ export function SignOutButton({ variant = "sidebar" }: SignOutButtonProps) {
     <button
       onClick={handleSignOut}
       className={cn(
-        "flex items-center gap-3 w-full px-3 py-2.5 text-sm tracking-wide transition-colors rounded-md",
+        "cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-sm tracking-wide transition-colors rounded-md",
         "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
       )}
     >
