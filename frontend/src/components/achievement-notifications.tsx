@@ -10,22 +10,25 @@ export function AchievementNotifications() {
   startDate.setDate(startDate.getDate() - 364)
   const start = startDate.toISOString().split("T")[0]
 
-  const { data: habits = [] } = useHabits()
-  const { data: completions = [] } = useCompletionsForRange(start, today)
+  const { data: habits = [], isSuccess: habitsReady } = useHabits()
+  const { data: completions = [], isSuccess: completionsReady } = useCompletionsForRange(start, today)
 
   const achievements = useMemo(
     () => computeAchievements(habits, completions),
     [habits, completions]
   )
 
-  const prevUnlockedIds = useRef<Set<string> | null>(null)
+  const initialized = useRef(false)
+  const prevUnlockedIds = useRef<Set<string>>(new Set())
 
   useEffect(() => {
+    if (!habitsReady || !completionsReady) return
+
     const currentUnlocked = new Set(
       achievements.filter((a) => a.unlocked).map((a) => a.id)
     )
 
-    if (prevUnlockedIds.current !== null) {
+    if (initialized.current) {
       for (const id of currentUnlocked) {
         if (!prevUnlockedIds.current.has(id)) {
           const achievement = achievements.find((a) => a.id === id)
@@ -38,8 +41,9 @@ export function AchievementNotifications() {
       }
     }
 
+    initialized.current = true
     prevUnlockedIds.current = currentUnlocked
-  }, [achievements])
+  }, [achievements, habitsReady, completionsReady])
 
   return null
 }

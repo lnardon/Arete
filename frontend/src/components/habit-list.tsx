@@ -108,6 +108,7 @@ export function HabitList() {
           onPrevious={handlePrevious}
           onNext={handleNext}
           onToday={handleToday}
+          onDateSelect={setCurrentDate}
         />
 
         <div className="my-6 h-px bg-border" />
