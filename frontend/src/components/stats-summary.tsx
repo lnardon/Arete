@@ -2,10 +2,7 @@
 
 import { useMemo } from "react"
 import type { Habit, HabitCompletion } from "@/lib/types"
-
-function formatDateKey(d: Date): string {
-  return d.toISOString().split("T")[0]
-}
+import { formatLocalDate } from "@/lib/date-utils"
 
 interface StatCardProps {
   label: string
@@ -49,8 +46,8 @@ export function StatsSummary({ habits, completions }: StatsSummaryProps) {
     if (totalHabits > 0) {
       const cursor = new Date(today)
       while (true) {
-        const key = formatDateKey(cursor)
-        const activeOnDay = habits.filter((h) => h.createdAt.split("T")[0] <= key).length
+        const key = formatLocalDate(cursor)
+        const activeOnDay = habits.filter((h) => formatLocalDate(new Date(h.createdAt)) <= key).length
         const dayCompletions = completions.filter((c) => c.date === key).length
         if (activeOnDay > 0 && dayCompletions === activeOnDay) {
           currentStreak++
@@ -66,7 +63,7 @@ export function StatsSummary({ habits, completions }: StatsSummaryProps) {
       const sortedDates = Array.from(uniqueDates).sort()
       let tempStreak = 0
       for (const dateStr of sortedDates) {
-        const activeOnDay = habits.filter((h) => h.createdAt.split("T")[0] <= dateStr).length
+        const activeOnDay = habits.filter((h) => formatLocalDate(new Date(h.createdAt)) <= dateStr).length
         const dayCompletions = completions.filter(
           (c) => c.date === dateStr
         ).length

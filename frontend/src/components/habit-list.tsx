@@ -12,10 +12,7 @@ import { EmptyState } from "@/components/empty-state"
 import { useHabits, useCreateHabit, useUpdateHabit, useDeleteHabit } from "@/hooks/use-habits"
 import { useCompletionsForDate } from "@/hooks/use-completions"
 import type { Habit } from "@/lib/types"
-
-function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0]
-}
+import { formatLocalDate } from "@/lib/date-utils"
 
 export function HabitList() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -24,7 +21,7 @@ export function HabitList() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null)
 
-  const dateStr = formatDate(currentDate)
+  const dateStr = formatLocalDate(currentDate)
   const { data: habits = [], isLoading: habitsLoading } = useHabits()
   const { data: completions = [] } = useCompletionsForDate(dateStr)
 
@@ -32,7 +29,7 @@ export function HabitList() {
   const updateHabit = useUpdateHabit()
   const deleteHabit = useDeleteHabit()
 
-  const activeHabits = habits.filter((h) => h.createdAt.split("T")[0] <= dateStr)
+  const activeHabits = habits.filter((h) => formatLocalDate(new Date(h.createdAt)) <= dateStr)
   const activeIds = new Set(activeHabits.map((h) => h.id))
   const completed = completions.filter((c) => c.date === dateStr && activeIds.has(c.habitId)).length
   const total = activeHabits.length

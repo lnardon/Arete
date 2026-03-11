@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import type { Habit, HabitCompletion } from "@/lib/types"
+import { formatLocalDate } from "@/lib/date-utils"
 import {
   BarChart,
   Bar,
@@ -11,10 +12,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts"
-
-function formatDateKey(d: Date): string {
-  return d.toISOString().split("T")[0]
-}
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -30,9 +27,9 @@ export function WeeklyChart({ habits, completions }: { habits: Habit[], completi
     return DAY_LABELS.map((label, idx) => {
       const d = new Date(monday)
       d.setDate(d.getDate() + idx)
-      const key = formatDateKey(d)
+      const key = formatLocalDate(d)
       const completed = completions.filter((c) => c.date === key).length
-      const activeCount = habits.filter((h) => h.createdAt.split("T")[0] <= key).length
+      const activeCount = habits.filter((h) => formatLocalDate(new Date(h.createdAt)) <= key).length
       const missed = Math.max(0, activeCount - completed)
       return { day: label, completed, missed }
     })
@@ -44,7 +41,7 @@ export function WeeklyChart({ habits, completions }: { habits: Habit[], completi
   )
 
   return (
-    <div className="border border-border rounded-lg bg-card px-5 py-6">
+    <div className="border border-border rounded-lg bg-card px-5 py-6 height-fit">
       <p className="label-section mb-6">
         This Week
       </p>

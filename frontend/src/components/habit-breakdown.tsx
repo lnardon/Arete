@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import type { Habit, HabitCompletion } from "@/lib/types"
+import { formatLocalDate } from "@/lib/date-utils"
 
 export function HabitBreakdown({ habits, completions }: { habits: Habit[], completions: HabitCompletion[] }) {
   const breakdown = useMemo(() => {
@@ -13,7 +14,7 @@ export function HabitBreakdown({ habits, completions }: { habits: Habit[], compl
     return habits.map((habit) => {
       const habitCompletions = completions.filter((c) => {
         if (c.habitId !== habit.id) return false
-        return c.date >= thirtyDaysAgo.toISOString().split("T")[0]
+        return c.date >= formatLocalDate(thirtyDaysAgo)
       })
       const count = habitCompletions.length
       const rate = Math.round((count / 30) * 100)

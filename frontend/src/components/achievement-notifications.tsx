@@ -3,12 +3,13 @@ import { toast } from "sonner"
 import { useHabits } from "@/hooks/use-habits"
 import { useCompletionsForRange } from "@/hooks/use-completions"
 import { computeAchievements } from "@/lib/achievements"
+import { formatLocalDate } from "@/lib/date-utils"
 
 export function AchievementNotifications() {
-  const today = new Date().toISOString().split("T")[0]
+  const today = formatLocalDate(new Date())
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 364)
-  const start = startDate.toISOString().split("T")[0]
+  const start = formatLocalDate(startDate)
 
   const { data: habits = [], isSuccess: habitsReady } = useHabits()
   const { data: completions = [], isSuccess: completionsReady } = useCompletionsForRange(start, today)

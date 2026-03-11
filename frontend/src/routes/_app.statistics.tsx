@@ -7,16 +7,17 @@ import { WeeklyChart } from "@/components/weekly-chart"
 import { HabitBreakdown } from "@/components/habit-breakdown"
 import { useHabits } from "@/hooks/use-habits"
 import { useCompletionsForRange } from "@/hooks/use-completions"
+import { formatLocalDate } from "@/lib/date-utils"
 
 export const Route = createFileRoute('/_app/statistics')({
   component: StatisticsPage,
 })
 
 export default function StatisticsPage() {
-  const today = new Date().toISOString().split("T")[0]
+  const today = formatLocalDate(new Date())
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 364)
-  const start = startDate.toISOString().split("T")[0]
+  const start = formatLocalDate(startDate)
 
   const { data: habits = [] } = useHabits()
   const { data: completions = [] } = useCompletionsForRange(start, today)

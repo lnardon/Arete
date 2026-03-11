@@ -2,16 +2,13 @@
 
 import { useMemo, useRef, useEffect, useState } from "react"
 import type { Habit, HabitCompletion } from "@/lib/types"
+import { formatLocalDate } from "@/lib/date-utils"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-function formatDateKey(d: Date): string {
-  return d.toISOString().split("T")[0]
-}
 
 function formatDisplayDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00")
@@ -88,9 +85,9 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
 
     const cursor = new Date(startDate)
     while (cursor <= today) {
-      const key = formatDateKey(cursor)
+      const key = formatLocalDate(cursor)
       const completed = completionsByDate.get(key) || 0
-      const total = habits.filter((h) => h.createdAt.split("T")[0] <= key).length
+      const total = habits.filter((h) => formatLocalDate(new Date(h.createdAt)) <= key).length
       currentWeek.push({
         date: key,
         completed,

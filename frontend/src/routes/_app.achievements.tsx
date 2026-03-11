@@ -7,6 +7,7 @@ import { AchievementCard } from "@/components/achievement-card"
 import { useHabits } from "@/hooks/use-habits"
 import { useCompletionsForRange } from "@/hooks/use-completions"
 import { computeAchievements } from "@/lib/achievements"
+import { formatLocalDate } from "@/lib/date-utils"
 
 export const Route = createFileRoute('/_app/achievements')({
   component: AchievementsPage,
@@ -31,10 +32,10 @@ const categoryDescriptions: Record<string, string> = {
 const categoryOrder = ["foundation", "streak", "volume", "mastery", "collection"]
 
 export default function AchievementsPage() {
-  const today = new Date().toISOString().split("T")[0]
+  const today = formatLocalDate(new Date())
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 364)
-  const start = startDate.toISOString().split("T")[0]
+  const start = formatLocalDate(startDate)
 
   const { data: habits = [] } = useHabits()
   const { data: completions = [] } = useCompletionsForRange(start, today)

@@ -1,4 +1,5 @@
 import type { Habit, HabitCompletion } from "@/lib/types"
+import { formatLocalDate } from "@/lib/date-utils"
 
 export interface Achievement {
   id: string
@@ -9,10 +10,6 @@ export interface Achievement {
   unlocked: boolean
   progress: number
   goal: number
-}
-
-function formatDateKey(d: Date): string {
-  return d.toISOString().split("T")[0]
 }
 
 function computeCurrentStreak(
@@ -27,7 +24,7 @@ function computeCurrentStreak(
   const cursor = new Date(today)
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
-    const key = formatDateKey(cursor)
+    const key = formatLocalDate(cursor)
     const done = completions.filter((c) => c.date === key).length
     if (done === total) {
       streak++
