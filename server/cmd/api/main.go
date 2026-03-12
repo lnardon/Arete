@@ -93,11 +93,13 @@ func main() {
 
 	habitRepo := repository.NewHabitRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	goalRepo := repository.NewGoalRepository(db)
 	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
 
 	habitHandler := handlers.NewHabitHandler(habitRepo)
 	completionHandler := handlers.NewCompletionHandler(habitRepo)
 	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
+	goalHandler := handlers.NewGoalHandler(goalRepo)
 
 	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
 
@@ -106,6 +108,7 @@ func main() {
 		HabitHandler:      habitHandler,
 		CompletionHandler: completionHandler,
 		AuthHandler:       authHandler,
+		GoalHandler:       goalHandler,
 		AuthService:       authSvc,
 		AllowedOrigin:     cfg.App.AppDomain,
 		RateLimiter:       rateLimiter,

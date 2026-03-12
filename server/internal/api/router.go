@@ -16,6 +16,7 @@ type RouterConfig struct {
 	HabitHandler      *handlers.HabitHandler
 	CompletionHandler *handlers.CompletionHandler
 	AuthHandler       *handlers.AuthHandler
+	GoalHandler       *handlers.GoalHandler
 	AuthService       *auth.Service
 	AllowedOrigin     string
 	RateLimiter       *middleware.RateLimiter
@@ -78,6 +79,10 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/completions", jwtMiddleware(http.HandlerFunc(config.CompletionHandler.GetCompletions))).Methods("GET")
 	protected.Handle("/completions/range", jwtMiddleware(http.HandlerFunc(config.CompletionHandler.GetCompletionsRange))).Methods("GET")
 	protected.Handle("/completions/toggle", jwtMiddleware(http.HandlerFunc(config.CompletionHandler.ToggleCompletion))).Methods("POST")
+	protected.Handle("/goals", jwtMiddleware(http.HandlerFunc(config.GoalHandler.ListGoals))).Methods("GET")
+	protected.Handle("/goals", jwtMiddleware(http.HandlerFunc(config.GoalHandler.CreateGoal))).Methods("POST")
+	protected.Handle("/goals/{id}/toggle", jwtMiddleware(http.HandlerFunc(config.GoalHandler.ToggleGoal))).Methods("PATCH")
+	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.DeleteGoal))).Methods("DELETE")
 
 	// Serve frontend SPA
 	if config.StaticDir != "" {

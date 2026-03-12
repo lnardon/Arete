@@ -1,4 +1,4 @@
-import type { Habit, HabitCompletion } from '@/lib/types'
+import type { Goal, Habit, HabitCompletion } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -45,6 +45,16 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ habitId, date }),
       }),
+  },
+  goals: {
+    list: (periodType: string, periodKey: string) =>
+      request<Goal[]>(`/api/v1/goals?period_type=${periodType}&period_key=${periodKey}`),
+    create: (title: string, periodType: string, periodKey: string) =>
+      request<Goal>('/api/v1/goals', { method: 'POST', body: JSON.stringify({ title, periodType, periodKey }) }),
+    toggle: (id: string) =>
+      request<Goal>(`/api/v1/goals/${id}/toggle`, { method: 'PATCH' }),
+    delete: (id: string) =>
+      request<void>(`/api/v1/goals/${id}`, { method: 'DELETE' }),
   },
   auth: {
     register: (username: string, password: string) =>

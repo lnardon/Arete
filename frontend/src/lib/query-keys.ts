@@ -3,6 +3,11 @@ export const queryKeys = {
     all: ['habits'] as const,
     list: () => [...queryKeys.habits.all, 'list'] as const,
   },
+  goals: {
+    all: ['goals'] as const,
+    list: (periodType: string, periodKey: string) =>
+      [...queryKeys.goals.all, periodType, periodKey] as const,
+  },
   completions: {
     all: ['completions'] as const,
     forDate: (date: string) => [...queryKeys.completions.all, 'date', date] as const,

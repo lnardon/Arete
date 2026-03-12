@@ -16,6 +16,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStatisticsRouteImport } from './routes/_app.statistics'
 import { Route as AppAchievementsRouteImport } from './routes/_app.achievements'
+import { Route as AppGoalsRouteImport } from './routes/_app.goals'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -57,10 +58,17 @@ const AppAchievementsRoute = AppAchievementsRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 
+const AppGoalsRoute = AppGoalsRouteImport.update({
+  id: '/_app/goals',
+  path: '/goals',
+  getParentRoute: () => AppRoute,
+} as any)
+
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/statistics': typeof AppStatisticsRoute
   '/achievements': typeof AppAchievementsRoute
+  '/goals': typeof AppGoalsRoute
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/statistics': typeof AppStatisticsRoute
   '/achievements': typeof AppAchievementsRoute
+  '/goals': typeof AppGoalsRoute
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
 }
@@ -82,14 +91,15 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/statistics': typeof AppStatisticsRoute
   '/_app/achievements': typeof AppAchievementsRoute
+  '/_app/goals': typeof AppGoalsRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/statistics' | '/achievements' | '/login' | '/signup'
+  fullPaths: '/' | '/statistics' | '/achievements' | '/goals' | '/login' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/statistics' | '/achievements' | '/login' | '/signup'
-  id: '__root__' | '/_auth' | '/_auth/login' | '/_auth/signup' | '/_app' | '/_app/' | '/_app/statistics' | '/_app/achievements'
+  to: '/' | '/statistics' | '/achievements' | '/goals' | '/login' | '/signup'
+  id: '__root__' | '/_auth' | '/_auth/login' | '/_auth/signup' | '/_app' | '/_app/' | '/_app/statistics' | '/_app/achievements' | '/_app/goals'
   fileRoutesById: FileRoutesById
 }
 
@@ -102,6 +112,7 @@ export interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppStatisticsRoute: typeof AppStatisticsRoute
   AppAchievementsRoute: typeof AppAchievementsRoute
+  AppGoalsRoute: typeof AppGoalsRoute
 }
 
 export interface RootRouteChildren {
@@ -160,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAchievementsRouteImport
       parentRoute: typeof AppRouteImport
     }
+    '/_app/goals': {
+      id: '/_app/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof AppGoalsRouteImport
+      parentRoute: typeof AppRouteImport
+    }
   }
 }
 
@@ -172,6 +190,7 @@ const appRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppStatisticsRoute: AppStatisticsRoute,
   AppAchievementsRoute: AppAchievementsRoute,
+  AppGoalsRoute: AppGoalsRoute,
 }
 
 const rootRouteChildren: RootRouteChildren = {

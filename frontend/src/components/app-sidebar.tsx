@@ -1,4 +1,4 @@
-import { BarChart3, LayoutDashboard, Trophy } from "lucide-react"
+import { BarChart3, LayoutDashboard, Target, Trophy } from "lucide-react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 import { ThemeSwitcher } from "@/components/theme-switcher"
@@ -8,6 +8,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Today", href: "/" },
   { icon: BarChart3, label: "Statistics", href: "/statistics" },
   { icon: Trophy, label: "Achievements", href: "/achievements" },
+  { icon: Target, label: "Goals", href: "/goals" },
 ]
 
 export function AppSidebar() {
