@@ -86,7 +86,7 @@ export function HabitList() {
   if (habitsLoading) {
     return (
       <main className="flex-1 overflow-y-auto bg-background">
-        <div className="max-w-2xl mx-auto px-5 py-8 md:px-8 md:py-12">
+        <div className="max-w-5xl mx-auto px-5 py-8 md:px-8 md:py-12">
           <div className="flex flex-col gap-2">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-14 rounded-xl bg-muted animate-pulse" />
@@ -99,7 +99,7 @@ export function HabitList() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background">
-      <div className="max-w-2xl mx-auto px-5 py-8 md:px-8 md:py-12">
+      <div className="max-w-5xl mx-auto px-5 py-8 md:px-8 md:py-12">
         <DateNavigator
           currentDate={currentDate}
           onPrevious={handlePrevious}

@@ -63,7 +63,7 @@ export default function AchievementsPage() {
       <div className="flex flex-col flex-1 min-w-0">
         <MobileHeader />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-5 py-8 md:px-8 md:py-12">
+          <div className="max-w-5xl mx-auto px-5 py-8 md:px-8 md:py-12">
             <div className="mb-2">
               <h2 className="font-display text-2xl font-semibold tracking-wide text-foreground text-balance">
                 Achievements
