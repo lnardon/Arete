@@ -41,7 +41,7 @@ export function WeeklyChart({ habits, completions }: { habits: Habit[], completi
   )
 
   return (
-    <div className="border border-border rounded-lg bg-card px-5 py-6 height-fit">
+    <div className="border border-border rounded-lg bg-card px-5 py-6 h-fit">
       <p className="label-section mb-6">
         This Week
       </p>
