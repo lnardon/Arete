@@ -12,18 +12,21 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
+import type { Goal } from "@/lib/types"
+
 interface GoalDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  goal?: Goal | null
   onSave: (title: string) => void
 }
 
-export function GoalDialog({ open, onOpenChange, onSave }: GoalDialogProps) {
+export function GoalDialog({ open, onOpenChange, goal, onSave }: GoalDialogProps) {
   const [title, setTitle] = useState("")
 
   useEffect(() => {
-    if (open) setTitle("")
-  }, [open])
+    if (open) setTitle(goal?.title ?? "")
+  }, [open, goal])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -40,10 +43,10 @@ export function GoalDialog({ open, onOpenChange, onSave }: GoalDialogProps) {
       <DialogContent className="sm:max-w-md border-foreground/20">
         <DialogHeader>
           <DialogTitle className="font-display text-xl font-semibold tracking-tight">
-            New Goal
+            {goal ? "Edit Goal" : "New Goal"}
           </DialogTitle>
-          <DialogDescription className="text-xs tracking-[0.15em] uppercase text-muted-foreground">
-            Define a goal for this period
+          <DialogDescription>
+            {goal ? "Modify this goal's title" : "Define a goal for this period"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -70,7 +73,7 @@ export function GoalDialog({ open, onOpenChange, onSave }: GoalDialogProps) {
               disabled={!title.trim()}
               className="bg-foreground text-background hover:bg-foreground/80"
             >
-              Add Goal
+              {goal ? "Save Changes" : "Add Goal"}
             </Button>
           </DialogFooter>
         </form>

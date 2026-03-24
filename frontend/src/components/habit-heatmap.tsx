@@ -140,19 +140,16 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
       </div>
 
       <div ref={scrollRef} className="overflow-x-auto heatmap-scroll pb-4">
-        <div className="min-w-[720px]">
-          <div className="flex gap-0.5 mb-1 ml-8">
+        <div className="min-w-[720px] w-full">
+          <div className="flex mb-1 ml-8">
             {monthLabels.map((m, i) => {
               const nextWeek = monthLabels[i + 1]?.weekIndex ?? weeks.length
               const span = nextWeek - m.weekIndex
               return (
                 <div
                   key={`${m.label}-${m.weekIndex}`}
-                  className="text-[10px] tracking-wider uppercase text-muted-foreground"
-                  style={{
-                    width: `${span * 13}px`,
-                    flexShrink: 0,
-                  }}
+                  className="text-[10px] tracking-wider uppercase text-muted-foreground overflow-hidden"
+                  style={{ width: `calc(${span} * (1rem + 2px) - 2px)`, flexShrink: 0 }}
                 >
                   {span >= 3 ? m.label : ""}
                 </div>
@@ -165,7 +162,7 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
               {[0, 1, 2, 3, 4, 5, 6].map((dayIdx) => (
                 <div
                   key={dayIdx}
-                  className="h-[11px] flex items-center justify-end"
+                  className="h-4 flex items-center justify-end"
                 >
                   <span className="text-[9px] tracking-wider uppercase text-muted-foreground w-6 text-right">
                     {dayIdx === 0 ? "Sun" : dayIdx === 3 ? "Wed" : dayIdx === 6 ? "Sat" : ""}
@@ -177,12 +174,12 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
             <TooltipProvider delay={1000}>
               <div className="flex gap-0.5">
                 {weeks.map((week, wIdx) => (
-                  <div key={wIdx} className="flex flex-col gap-0.5">
+                  <div key={wIdx} className="flex flex-col gap-0.5 flex-none w-4">
                     {week.map((day) => (
                       <Tooltip key={day.date}>
                         <TooltipTrigger>
                           <div
-                            className={`w-[11px] h-[11px] ${getIntensityClass(day.ratio, day.total)} transition-all duration-150 hover:ring-1 hover:ring-foreground/40 cursor-default`}
+                            className={`w-4 h-4 ${getIntensityClass(day.ratio, day.total)} transition-all duration-150 hover:ring-1 hover:ring-foreground/40 cursor-default`}
                             onMouseEnter={() => setHoveredDay(day)}
                             onMouseLeave={() => setHoveredDay(null)}
                           />
@@ -203,7 +200,7 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
                       </Tooltip>
                     ))}
                     {Array.from({ length: 7 - week.length }).map((_, pIdx) => (
-                      <div key={`pad-${pIdx}`} className="w-[11px] h-[11px]" />
+                      <div key={`pad-${pIdx}`} className="w-4 h-4" />
                     ))}
                   </div>
                 ))}

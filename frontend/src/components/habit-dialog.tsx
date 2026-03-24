@@ -51,7 +51,7 @@ export function HabitDialog({
           <DialogTitle className="font-display text-xl font-semibold tracking-tight">
             {habit ? "Edit Habit" : "New Habit"}
           </DialogTitle>
-          <DialogDescription className="text-xs tracking-[0.15em] uppercase text-muted-foreground">
+          <DialogDescription>
             {habit
               ? "Modify the name of your habit"
               : "Define a new daily practice"}
