@@ -51,6 +51,8 @@ export const api = {
       request<Goal[]>(`/api/v1/goals?period_type=${periodType}&period_key=${periodKey}`),
     create: (title: string, periodType: string, periodKey: string) =>
       request<Goal>('/api/v1/goals', { method: 'POST', body: JSON.stringify({ title, periodType, periodKey }) }),
+    update: (id: string, title: string) =>
+      request<Goal>(`/api/v1/goals/${id}`, { method: 'PUT', body: JSON.stringify({ title }) }),
     toggle: (id: string) =>
       request<Goal>(`/api/v1/goals/${id}/toggle`, { method: 'PATCH' }),
     delete: (id: string) =>

@@ -100,6 +100,38 @@ func (h *GoalHandler) ToggleGoal(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, goal)
 }
 
+func (h *GoalHandler) UpdateGoal(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
+	var body struct {
+		Title string `json:"title"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if body.Title == "" || len(body.Title) > 255 {
+		http.Error(w, "title must be between 1 and 255 characters", http.StatusBadRequest)
+		return
+	}
+
+	id := mux.Vars(r)["id"]
+	goal, err := h.repo.UpdateGoal(r.Context(), authUser.ID, id, body.Title)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			http.Error(w, "goal not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "failed to update goal", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, goal)
+}
+
 func (h *GoalHandler) DeleteGoal(w http.ResponseWriter, r *http.Request) {
 	authUser, ok := auth.UserFromContext(r.Context())
 	if !ok {

@@ -7,9 +7,9 @@ import { GoalItem } from "@/components/goal-item"
 import { GoalDialog } from "@/components/goal-dialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useGoals, useCreateGoal, useToggleGoal, useDeleteGoal } from "@/hooks/use-goals"
+import { useGoals, useCreateGoal, useUpdateGoal, useToggleGoal, useDeleteGoal } from "@/hooks/use-goals"
 import { getCurrentPeriodKey, formatPeriodLabel, navigatePeriodKey } from "@/lib/date-utils"
-import type { GoalPeriodType } from "@/lib/types"
+import type { Goal, GoalPeriodType } from "@/lib/types"
 
 export const Route = createFileRoute('/_app/goals')({
   component: GoalsPage,
@@ -24,14 +24,20 @@ const PERIOD_TYPES: { value: GoalPeriodType; label: string }[] = [
 
 function GoalTabPanel({ periodType }: { periodType: GoalPeriodType }) {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [periodKey, setPeriodKey] = useState(() => getCurrentPeriodKey(periodType))
   const { data: goals = [] } = useGoals(periodType, periodKey)
   const createGoal = useCreateGoal()
+  const updateGoal = useUpdateGoal()
   const toggleGoal = useToggleGoal()
   const deleteGoal = useDeleteGoal()
 
   function handleSave(title: string) {
-    createGoal.mutate({ title, periodType, periodKey })
+    if (editingGoal) {
+      updateGoal.mutate({ id: editingGoal.id, title })
+    } else {
+      createGoal.mutate({ title, periodType, periodKey })
+    }
   }
 
   return (
@@ -81,6 +87,7 @@ function GoalTabPanel({ periodType }: { periodType: GoalPeriodType }) {
               goal={goal}
               onToggle={(id) => toggleGoal.mutate({ id })}
               onDelete={(id) => deleteGoal.mutate(id)}
+              onEdit={(g) => { setEditingGoal(g); setDialogOpen(true) }}
             />
           ))}
         </div>
@@ -88,7 +95,8 @@ function GoalTabPanel({ periodType }: { periodType: GoalPeriodType }) {
 
       <GoalDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingGoal(null) }}
+        goal={editingGoal}
         onSave={handleSave}
       />
     </div>

@@ -69,6 +69,19 @@ func (r *GoalRepository) ToggleGoal(ctx context.Context, userID, id string) (mod
 	return g, err
 }
 
+func (r *GoalRepository) UpdateGoal(ctx context.Context, userID, id, title string) (models.Goal, error) {
+	var g models.Goal
+	err := r.db.QueryRowContext(ctx,
+		`UPDATE goals SET title = $1 WHERE id = $2 AND user_id = $3
+		 RETURNING id, user_id, title, period_type, period_key, completed, created_at`,
+		title, id, userID,
+	).Scan(&g.ID, &g.UserID, &g.Title, &g.PeriodType, &g.PeriodKey, &g.Completed, &g.CreatedAt)
+	if err == sql.ErrNoRows {
+		return g, ErrNotFound
+	}
+	return g, err
+}
+
 func (r *GoalRepository) DeleteGoal(ctx context.Context, userID, id string) error {
 	result, err := r.db.ExecContext(ctx,
 		`DELETE FROM goals WHERE id = $1 AND user_id = $2`,

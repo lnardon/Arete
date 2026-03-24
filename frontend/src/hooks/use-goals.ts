@@ -33,6 +33,17 @@ export function useToggleGoal() {
   })
 }
 
+export function useUpdateGoal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) => api.goals.update(id, title),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.goals.all })
+      toast.success('Goal updated')
+    },
+  })
+}
+
 export function useDeleteGoal() {
   const queryClient = useQueryClient()
   return useMutation({
