@@ -134,8 +134,8 @@ export function HabitList() {
                 onClick={handleOpenCreate}
                 className="h-8 text-sm gap-1.5 px-3 rounded-lg border-border hover:bg-muted"
               >
-                <Plus className="w-3.5 h-3.5 mr-1.5" />
-                Add Habit
+                <Plus className="w-4 h-4 mr-1" />
+                Create Habit
               </Button>
             </div>
             <div className="flex flex-col gap-2">
