@@ -43,7 +43,7 @@ export function DeleteDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-foreground/20 text-foreground bg-transparent hover:bg-foreground hover:text-background"
+            className="border-foreground/20 text-foreground bg-transparent"
           >
             Keep Habit
           </Button>

@@ -1,7 +1,5 @@
 "use client"
-
 import React from "react"
-
 import { useState, useEffect } from "react"
 import {
   Dialog,
@@ -72,7 +70,7 @@ export function HabitDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-foreground/20 text-foreground bg-transparent hover:bg-foreground hover:text-background"
+              className="border-foreground/20 text-foreground bg-transparent hover:text-red-600"
             >
               Cancel
             </Button>
