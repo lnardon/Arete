@@ -14,4 +14,8 @@ export const queryKeys = {
     forRange: (start: string, end: string) =>
       [...queryKeys.completions.all, 'range', start, end] as const,
   },
+  whatsapp: {
+    all: ['whatsapp'] as const,
+    status: () => [...queryKeys.whatsapp.all, 'status'] as const,
+  },
 }

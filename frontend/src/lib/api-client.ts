@@ -1,4 +1,4 @@
-import type { Goal, Habit, HabitCompletion } from '@/lib/types'
+import type { Goal, Habit, HabitCompletion, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -57,6 +57,13 @@ export const api = {
       request<Goal>(`/api/v1/goals/${id}/toggle`, { method: 'PATCH' }),
     delete: (id: string) =>
       request<void>(`/api/v1/goals/${id}`, { method: 'DELETE' }),
+  },
+  whatsapp: {
+    status: () => request<WhatsAppStatus>('/api/v1/whatsapp/status'),
+    getLinkCode: () =>
+      request<WhatsAppLinkCode>('/api/v1/whatsapp/link/code', { method: 'POST' }),
+    unlink: () =>
+      request<void>('/api/v1/whatsapp/link', { method: 'DELETE' }),
   },
   auth: {
     register: (username: string, password: string) =>

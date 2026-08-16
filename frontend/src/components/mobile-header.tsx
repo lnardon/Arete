@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
-import { Home, BarChart2, Trophy, Target, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { Home, BarChart2, Trophy, Target, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { useAuth } from "@/lib/auth"
 import { useQueryClient } from "@tanstack/react-query"
@@ -25,6 +25,7 @@ export function MobileHeader() {
   const isStats = pathname === "/statistics"
   const isAchievements = pathname === "/achievements"
   const isGoals = pathname === "/goals"
+  const isSettings = pathname === "/settings"
 
   async function handleSignOut() {
     await api.auth.logout()
@@ -83,6 +84,13 @@ export function MobileHeader() {
               <Target className="w-4 h-4" />
               Goals
               {isGoals && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={isSettings ? "font-semibold" : ""}>
+            <Link to="/settings" className="flex items-center gap-2 w-full">
+              <Settings className="w-4 h-4" />
+              Settings
+              {isSettings && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

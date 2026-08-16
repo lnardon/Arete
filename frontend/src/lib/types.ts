@@ -20,3 +20,12 @@ export interface Goal {
   completed: boolean
   createdAt: string
 }
+
+export type WhatsAppStatus =
+  | { linked: false }
+  | { linked: true; phoneNumberMasked: string; linkedAt: string }
+
+export interface WhatsAppLinkCode {
+  code: string
+  expiresAt: string
+}
