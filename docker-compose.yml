@@ -28,9 +28,60 @@ services:
       DB_NAME: arete_dev
       DB_SSLMODE: disable
       STATIC_DIR: /app/frontend
+      JWT_SECRET: ${JWT_SECRET}
+      APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8080}
+      # Set to true behind real HTTPS in production.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      EVOLUTION_API_BASE_URL: http://evolution-api:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+      EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-arete}
+      EVOLUTION_WEBHOOK_SECRET: ${EVOLUTION_WEBHOOK_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6-luna}
     depends_on:
       postgres:
         condition: service_healthy
+      evolution-api:
+        condition: service_started
+
+  evolution-postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution
+      POSTGRES_DB: evolution
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  evolution-redis:
+    image: redis:latest
+    volumes:
+      - evolution_redis_data:/data
+
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    environment:
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:evolution@evolution-postgres:5432/evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://evolution-redis:6379
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      WEBHOOK_GLOBAL_URL: http://app:8080/api/v1/webhooks/whatsapp?token=${EVOLUTION_WEBHOOK_SECRET}
+      WEBHOOK_GLOBAL_ENABLED: "true"
+      WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS: "false"
+    depends_on:
+      evolution-postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8080" # local QR-pairing/admin only — not needed publicly in production
 
 volumes:
   postgres_data:
+  evolution_postgres_data:
+  evolution_redis_data:
