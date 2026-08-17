@@ -88,6 +88,7 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/goals", jwtMiddleware(http.HandlerFunc(config.GoalHandler.ListGoals))).Methods("GET")
 	protected.Handle("/goals", jwtMiddleware(http.HandlerFunc(config.GoalHandler.CreateGoal))).Methods("POST")
 	protected.Handle("/goals/{id}/toggle", jwtMiddleware(http.HandlerFunc(config.GoalHandler.ToggleGoal))).Methods("PATCH")
+	protected.Handle("/goals/{id}/progress", jwtMiddleware(http.HandlerFunc(config.GoalHandler.AddGoalProgress))).Methods("PATCH")
 	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.UpdateGoal))).Methods("PUT")
 	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.DeleteGoal))).Methods("DELETE")
 	protected.Handle("/whatsapp/link/code", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.CreateLinkCode))).Methods("POST")

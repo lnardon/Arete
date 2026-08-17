@@ -10,6 +10,7 @@ export interface HabitCompletion {
 }
 
 export type GoalPeriodType = 'month' | 'quarter' | 'semester' | 'year'
+export type GoalType = 'binary' | 'numeric'
 
 export interface Goal {
   id: string
@@ -17,6 +18,9 @@ export interface Goal {
   title: string
   periodType: GoalPeriodType
   periodKey: string
+  goalType: GoalType
+  targetValue: number | null
+  currentValue: number
   completed: boolean
   createdAt: string
 }

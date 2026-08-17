@@ -18,7 +18,13 @@ var validPeriodTypes = map[string]bool{
 	"year":     true,
 }
 
+var validGoalTypes = map[string]bool{
+	"binary":  true,
+	"numeric": true,
+}
+
 var errInvalidPeriodType = errors.New("periodType must be one of: month; quarter; semester; year")
+var errInvalidGoalType = errors.New("goalType must be one of: binary; numeric")
 
 type toolHandler func(ctx context.Context, args map[string]any) (string, error)
 
@@ -43,6 +49,16 @@ func argString(args map[string]any, key string) string {
 		return v
 	}
 	return ""
+}
+
+// argInt reads an integer argument. JSON numbers decode to float64 in a
+// map[string]any, so this converts rather than type-asserting to int.
+func argInt(args map[string]any, key string) (int, bool) {
+	v, ok := args[key].(float64)
+	if !ok {
+		return 0, false
+	}
+	return int(v), true
 }
 
 func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, userID string, loc *time.Location) ([]openai.ChatCompletionToolUnionParam, map[string]toolHandler) {
@@ -183,19 +199,21 @@ func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.Goal
 			if err != nil {
 				return "", err
 			}
-			return jsonResult(goals)
+			return jsonResult(formatGoals(goals))
 		},
 	)
 
 	register("create_goal",
-		"Create a new goal for a specific period (month quarter semester or year).",
+		"Create a new goal for a specific period (month quarter semester or year). Goals are either binary (a single done/not-done checkbox) or numeric (progress toward a target count, like practicing tennis 222 times this year).",
 		`{
 			"type": "object",
 			"required": ["title", "periodType", "periodKey"],
 			"properties": {
 				"title": {"type": "string", "description": "The goal's title."},
 				"periodType": {"type": "string", "description": "One of these values: month; quarter; semester; year."},
-				"periodKey": {"type": "string", "description": "Period key matching periodType. Month uses 'YYYY-MM' like 2026-08. Quarter uses 'YYYY-QN' like 2026-Q3. Semester uses 'YYYY-HN' like 2026-H2. Year uses 'YYYY'."}
+				"periodKey": {"type": "string", "description": "Period key matching periodType. Month uses 'YYYY-MM' like 2026-08. Quarter uses 'YYYY-QN' like 2026-Q3. Semester uses 'YYYY-HN' like 2026-H2. Year uses 'YYYY'."},
+				"goalType": {"type": "string", "description": "One of these values: binary; numeric. Defaults to binary if omitted. Use numeric whenever the user describes a target count (e.g. 'practice tennis 222 times this year')."},
+				"targetValue": {"type": "integer", "description": "Required when goalType is numeric: the target count to reach (e.g. 222). Omit for binary goals."}
 			}
 		}`,
 		func(ctx context.Context, args map[string]any) (string, error) {
@@ -208,16 +226,33 @@ func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.Goal
 			if !validPeriodTypes[periodType] {
 				return "", errInvalidPeriodType
 			}
-			goal, err := goalRepo.CreateGoal(ctx, userID, title, periodType, periodKey)
+			goalType := argString(args, "goalType")
+			if goalType == "" {
+				goalType = "binary"
+			}
+			if !validGoalTypes[goalType] {
+				return "", errInvalidGoalType
+			}
+			var targetValue *int
+			if v, ok := argInt(args, "targetValue"); ok {
+				targetValue = &v
+			}
+			if goalType == "numeric" && (targetValue == nil || *targetValue <= 0) {
+				return "", errors.New("targetValue is required and must be greater than 0 for numeric goals")
+			}
+			if goalType == "binary" && targetValue != nil {
+				return "", errors.New("targetValue is only valid for numeric goals")
+			}
+			goal, err := goalRepo.CreateGoal(ctx, userID, title, periodType, periodKey, goalType, targetValue)
 			if err != nil {
 				return "", err
 			}
-			return jsonResult(goal)
+			return jsonResult(formatGoal(goal))
 		},
 	)
 
 	register("toggle_goal",
-		"Mark a goal as complete or undo that.",
+		"Mark a binary goal as complete or undo that. Only works for binary goals — for numeric goals (goalType 'numeric'), use log_goal_progress instead.",
 		`{
 			"type": "object",
 			"required": ["goalId"],
@@ -234,7 +269,34 @@ func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.Goal
 			if err != nil {
 				return "", err
 			}
-			return jsonResult(goal)
+			return jsonResult(formatGoal(goal))
+		},
+	)
+
+	register("log_goal_progress",
+		"Add to (or subtract from, with a negative delta) a numeric goal's current progress. Use this when the user reports doing something that counts toward a numeric goal, e.g. 'I practiced tennis today' adds 1. Only works for numeric goals — for binary goals, use toggle_goal instead.",
+		`{
+			"type": "object",
+			"required": ["goalId", "delta"],
+			"properties": {
+				"goalId": {"type": "string", "description": "The ID of the numeric goal (from list_goals)."},
+				"delta": {"type": "integer", "description": "Amount to add to the goal's current progress. Use a negative number to correct over-logging."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			goalID := argString(args, "goalId")
+			if goalID == "" {
+				return "", errors.New("goalId is required")
+			}
+			delta, ok := argInt(args, "delta")
+			if !ok || delta == 0 {
+				return "", errors.New("delta is required and must be non-zero")
+			}
+			goal, err := goalRepo.AddGoalProgress(ctx, userID, goalID, delta)
+			if err != nil {
+				return "", err
+			}
+			return jsonResult(formatGoal(goal))
 		},
 	)
 
@@ -254,11 +316,11 @@ func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.Goal
 			if goalID == "" || title == "" {
 				return "", errors.New("goalId and title are required")
 			}
-			goal, err := goalRepo.UpdateGoal(ctx, userID, goalID, title)
+			goal, err := goalRepo.UpdateGoal(ctx, userID, goalID, title, nil, nil)
 			if err != nil {
 				return "", err
 			}
-			return jsonResult(goal)
+			return jsonResult(formatGoal(goal))
 		},
 	)
 

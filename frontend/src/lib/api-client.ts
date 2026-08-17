@@ -1,4 +1,4 @@
-import type { Goal, Habit, HabitCompletion, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
+import type { Goal, GoalType, Habit, HabitCompletion, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -49,12 +49,17 @@ export const api = {
   goals: {
     list: (periodType: string, periodKey: string) =>
       request<Goal[]>(`/api/v1/goals?period_type=${periodType}&period_key=${periodKey}`),
-    create: (title: string, periodType: string, periodKey: string) =>
-      request<Goal>('/api/v1/goals', { method: 'POST', body: JSON.stringify({ title, periodType, periodKey }) }),
-    update: (id: string, title: string) =>
-      request<Goal>(`/api/v1/goals/${id}`, { method: 'PUT', body: JSON.stringify({ title }) }),
+    create: (title: string, periodType: string, periodKey: string, goalType: GoalType, targetValue?: number) =>
+      request<Goal>('/api/v1/goals', {
+        method: 'POST',
+        body: JSON.stringify({ title, periodType, periodKey, goalType, targetValue }),
+      }),
+    update: (id: string, fields: { title: string; targetValue?: number; currentValue?: number }) =>
+      request<Goal>(`/api/v1/goals/${id}`, { method: 'PUT', body: JSON.stringify(fields) }),
     toggle: (id: string) =>
       request<Goal>(`/api/v1/goals/${id}/toggle`, { method: 'PATCH' }),
+    addProgress: (id: string, delta: number) =>
+      request<Goal>(`/api/v1/goals/${id}/progress`, { method: 'PATCH', body: JSON.stringify({ delta }) }),
     delete: (id: string) =>
       request<void>(`/api/v1/goals/${id}`, { method: 'DELETE' }),
   },

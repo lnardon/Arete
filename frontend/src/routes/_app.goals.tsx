@@ -4,10 +4,17 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { MobileHeader } from "@/components/mobile-header"
 import { GoalItem } from "@/components/goal-item"
-import { GoalDialog } from "@/components/goal-dialog"
+import { GoalDialog, type GoalSaveFields } from "@/components/goal-dialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useGoals, useCreateGoal, useUpdateGoal, useToggleGoal, useDeleteGoal } from "@/hooks/use-goals"
+import {
+  useGoals,
+  useCreateGoal,
+  useUpdateGoal,
+  useToggleGoal,
+  useAddGoalProgress,
+  useDeleteGoal,
+} from "@/hooks/use-goals"
 import { getCurrentPeriodKey, formatPeriodLabel, navigatePeriodKey } from "@/lib/date-utils"
 import type { Goal, GoalPeriodType } from "@/lib/types"
 
@@ -30,13 +37,25 @@ function GoalTabPanel({ periodType }: { periodType: GoalPeriodType }) {
   const createGoal = useCreateGoal()
   const updateGoal = useUpdateGoal()
   const toggleGoal = useToggleGoal()
+  const addGoalProgress = useAddGoalProgress()
   const deleteGoal = useDeleteGoal()
 
-  function handleSave(title: string) {
+  function handleSave(fields: GoalSaveFields) {
     if (editingGoal) {
-      updateGoal.mutate({ id: editingGoal.id, title })
+      updateGoal.mutate({
+        id: editingGoal.id,
+        title: fields.title,
+        targetValue: fields.targetValue,
+        currentValue: fields.currentValue,
+      })
     } else {
-      createGoal.mutate({ title, periodType, periodKey })
+      createGoal.mutate({
+        title: fields.title,
+        periodType,
+        periodKey,
+        goalType: fields.goalType ?? "binary",
+        targetValue: fields.targetValue,
+      })
     }
   }
 
@@ -87,6 +106,8 @@ function GoalTabPanel({ periodType }: { periodType: GoalPeriodType }) {
               key={goal.id}
               goal={goal}
               onToggle={(id) => toggleGoal.mutate({ id })}
+              onAddProgress={(id) => addGoalProgress.mutate({ id, delta: 1 })}
+              progressPending={addGoalProgress.isPending && addGoalProgress.variables?.id === goal.id}
               onDelete={(id) => deleteGoal.mutate(id)}
               onEdit={(g) => { setEditingGoal(g); setDialogOpen(true) }}
             />

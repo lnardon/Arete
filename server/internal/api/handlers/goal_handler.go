@@ -17,6 +17,11 @@ var validPeriodTypes = map[string]bool{
 	"year":     true,
 }
 
+var validGoalTypes = map[string]bool{
+	"binary":  true,
+	"numeric": true,
+}
+
 type GoalHandler struct {
 	repo *repository.GoalRepository
 }
@@ -55,9 +60,11 @@ func (h *GoalHandler) CreateGoal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Title      string `json:"title"`
-		PeriodType string `json:"periodType"`
-		PeriodKey  string `json:"periodKey"`
+		Title       string `json:"title"`
+		PeriodType  string `json:"periodType"`
+		PeriodKey   string `json:"periodKey"`
+		GoalType    string `json:"goalType"`
+		TargetValue *int   `json:"targetValue"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
@@ -72,7 +79,24 @@ func (h *GoalHandler) CreateGoal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	goal, err := h.repo.CreateGoal(r.Context(), authUser.ID, body.Title, body.PeriodType, body.PeriodKey)
+	if body.GoalType == "" {
+		body.GoalType = "binary"
+	}
+	if !validGoalTypes[body.GoalType] {
+		http.Error(w, "invalid goalType", http.StatusBadRequest)
+		return
+	}
+	if body.GoalType == "numeric" {
+		if body.TargetValue == nil || *body.TargetValue <= 0 {
+			http.Error(w, "targetValue is required and must be greater than 0 for numeric goals", http.StatusBadRequest)
+			return
+		}
+	} else if body.TargetValue != nil {
+		http.Error(w, "targetValue is only valid for numeric goals", http.StatusBadRequest)
+		return
+	}
+
+	goal, err := h.repo.CreateGoal(r.Context(), authUser.ID, body.Title, body.PeriodType, body.PeriodKey, body.GoalType, body.TargetValue)
 	if err != nil {
 		http.Error(w, "failed to create goal", http.StatusInternalServerError)
 		return
@@ -108,7 +132,9 @@ func (h *GoalHandler) UpdateGoal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Title string `json:"title"`
+		Title        string `json:"title"`
+		TargetValue  *int   `json:"targetValue"`
+		CurrentValue *int   `json:"currentValue"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
@@ -118,15 +144,59 @@ func (h *GoalHandler) UpdateGoal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "title must be between 1 and 255 characters", http.StatusBadRequest)
 		return
 	}
+	if body.TargetValue != nil && *body.TargetValue <= 0 {
+		http.Error(w, "targetValue must be greater than 0", http.StatusBadRequest)
+		return
+	}
+	if body.CurrentValue != nil && *body.CurrentValue < 0 {
+		http.Error(w, "currentValue must be 0 or greater", http.StatusBadRequest)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
-	goal, err := h.repo.UpdateGoal(r.Context(), authUser.ID, id, body.Title)
+	goal, err := h.repo.UpdateGoal(r.Context(), authUser.ID, id, body.Title, body.TargetValue, body.CurrentValue)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			http.Error(w, "goal not found", http.StatusNotFound)
 			return
 		}
+		if errors.Is(err, repository.ErrInvalidGoalType) {
+			http.Error(w, "targetValue and currentValue are only valid for numeric goals", http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "failed to update goal", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, goal)
+}
+
+func (h *GoalHandler) AddGoalProgress(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
+
+	var body struct {
+		Delta int `json:"delta"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if body.Delta == 0 {
+		http.Error(w, "delta must be non-zero", http.StatusBadRequest)
+		return
+	}
+
+	id := mux.Vars(r)["id"]
+	goal, err := h.repo.AddGoalProgress(r.Context(), authUser.ID, id, body.Delta)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			http.Error(w, "goal not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "failed to update goal progress", http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, http.StatusOK, goal)
