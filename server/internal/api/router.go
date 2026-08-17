@@ -17,6 +17,7 @@ type RouterConfig struct {
 	CompletionHandler *handlers.CompletionHandler
 	AuthHandler       *handlers.AuthHandler
 	GoalHandler       *handlers.GoalHandler
+	WhatsAppHandler   *handlers.WhatsAppHandler
 	AuthService       *auth.Service
 	AllowedOrigin     string
 	RateLimiter       *middleware.RateLimiter
@@ -68,6 +69,11 @@ func NewRouter(config RouterConfig) http.Handler {
 	public.Handle("/auth/register", rateLimitMiddleware(http.HandlerFunc(config.AuthHandler.Register))).Methods("POST")
 	public.Handle("/auth/login", rateLimitMiddleware(http.HandlerFunc(config.AuthHandler.Login))).Methods("POST")
 	public.HandleFunc("/auth/logout", config.AuthHandler.Logout).Methods("POST")
+	// Evolution API can't send a JWT (or a custom header — see
+	// WhatsAppHandler.Webhook) — this route is protected instead by a
+	// shared-secret query param and, in production, by living on a private
+	// network rather than being publicly routable.
+	public.HandleFunc("/webhooks/whatsapp", config.WhatsAppHandler.Webhook).Methods("POST")
 
 	// Protected routes
 	protected := r.PathPrefix("/api/v1").Subrouter()
@@ -84,6 +90,9 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/goals/{id}/toggle", jwtMiddleware(http.HandlerFunc(config.GoalHandler.ToggleGoal))).Methods("PATCH")
 	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.UpdateGoal))).Methods("PUT")
 	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.DeleteGoal))).Methods("DELETE")
+	protected.Handle("/whatsapp/link/code", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.CreateLinkCode))).Methods("POST")
+	protected.Handle("/whatsapp/status", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Status))).Methods("GET")
+	protected.Handle("/whatsapp/link", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Unlink))).Methods("DELETE")
 
 	// Serve frontend SPA
 	if config.StaticDir != "" {

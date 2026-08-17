@@ -47,6 +47,10 @@ func (rl *RateLimiter) cleanup() {
 	}
 }
 
+func (rl *RateLimiter) Allow(key string) bool {
+	return rl.allow(key)
+}
+
 func (rl *RateLimiter) allow(ip string) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()

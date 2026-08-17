@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
+	"github.com/lnardon/arete/internal/ai"
 	"github.com/lnardon/arete/internal/api"
 	"github.com/lnardon/arete/internal/api/handlers"
 	"github.com/lnardon/arete/internal/api/middleware"
@@ -18,6 +20,9 @@ import (
 	"github.com/lnardon/arete/internal/config"
 	"github.com/lnardon/arete/internal/database"
 	"github.com/lnardon/arete/internal/repository"
+	"github.com/lnardon/arete/internal/whatsapp"
+	openai "github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
 func resolveStaticDir(staticDir string) string {
@@ -94,7 +99,18 @@ func main() {
 	habitRepo := repository.NewHabitRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	goalRepo := repository.NewGoalRepository(db)
+	whatsappRepo := repository.NewWhatsAppRepository(db)
+	conversationRepo := repository.NewConversationRepository(db)
 	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
+
+	loc, err := time.LoadLocation(cfg.App.Timezone)
+	if err != nil {
+		log.Fatal("Invalid APP_TIMEZONE:", err)
+	}
+
+	openaiClient := openai.NewClient(option.WithAPIKey(cfg.OpenAI.APIKey))
+	aiAgent := ai.NewAgent(&openaiClient, cfg.OpenAI.Model, cfg.OpenAI.TranscriptionModel, loc, habitRepo, goalRepo)
+	evoClient := whatsapp.NewClient(cfg.Evolution)
 
 	habitHandler := handlers.NewHabitHandler(habitRepo)
 	completionHandler := handlers.NewCompletionHandler(habitRepo)
@@ -102,6 +118,15 @@ func main() {
 	goalHandler := handlers.NewGoalHandler(goalRepo)
 
 	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
+	whatsappRateLimiter := middleware.NewRateLimiter(15, time.Minute)
+	whatsappHandler := handlers.NewWhatsAppHandler(
+		whatsappRepo,
+		conversationRepo,
+		aiAgent,
+		evoClient,
+		cfg.Evolution.WebhookSecret,
+		whatsappRateLimiter,
+	)
 
 	router := api.NewRouter(api.RouterConfig{
 		StaticDir:         staticDir,
@@ -109,6 +134,7 @@ func main() {
 		CompletionHandler: completionHandler,
 		AuthHandler:       authHandler,
 		GoalHandler:       goalHandler,
+		WhatsAppHandler:   whatsappHandler,
 		AuthService:       authSvc,
 		AllowedOrigin:     cfg.App.AppDomain,
 		RateLimiter:       rateLimiter,

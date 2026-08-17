@@ -9,11 +9,13 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	JWT      JWTConfig
-	App      AppConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	Redis     RedisConfig
+	JWT       JWTConfig
+	App       AppConfig
+	Evolution EvolutionConfig
+	OpenAI    OpenAIConfig
 }
 
 type ServerConfig struct {
@@ -50,6 +52,20 @@ type AppConfig struct {
 	Debug        bool
 	AppDomain    string
 	CookieSecure bool
+	Timezone     string // IANA name the WhatsApp assistant uses to resolve "today"
+}
+
+type EvolutionConfig struct {
+	BaseURL       string // internal base URL, e.g. http://evolution-api:8080
+	APIKey        string
+	InstanceName  string
+	WebhookSecret string // shared secret checked on inbound webhook requests
+}
+
+type OpenAIConfig struct {
+	APIKey             string
+	Model              string
+	TranscriptionModel string
 }
 
 func Load() (*Config, error) {
@@ -84,6 +100,18 @@ func Load() (*Config, error) {
 			Debug:        getEnvAsBool("DEBUG", false),
 			AppDomain:    getEnv("APP_DOMAIN", "http://localhost:5173"),
 			CookieSecure: getEnvAsBool("COOKIE_SECURE", true),
+			Timezone:     getEnv("APP_TIMEZONE", "America/Sao_Paulo"),
+		},
+		Evolution: EvolutionConfig{
+			BaseURL:       getEnv("EVOLUTION_API_BASE_URL", "http://localhost:8081"),
+			APIKey:        getEnv("EVOLUTION_API_KEY", ""),
+			InstanceName:  getEnv("EVOLUTION_INSTANCE_NAME", "arete"),
+			WebhookSecret: getEnv("EVOLUTION_WEBHOOK_SECRET", ""),
+		},
+		OpenAI: OpenAIConfig{
+			APIKey:             getEnv("OPENAI_API_KEY", ""),
+			Model:              getEnv("OPENAI_MODEL", "gpt-5.6-luna"),
+			TranscriptionModel: getEnv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe"),
 		},
 	}
 
