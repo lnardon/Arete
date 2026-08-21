@@ -1,4 +1,4 @@
-import type { Goal, GoalType, Habit, HabitCompletion, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
+import type { Goal, GoalType, Habit, HabitCompletion, JournalEntry, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -62,6 +62,19 @@ export const api = {
       request<Goal>(`/api/v1/goals/${id}/progress`, { method: 'PATCH', body: JSON.stringify({ delta }) }),
     delete: (id: string) =>
       request<void>(`/api/v1/goals/${id}`, { method: 'DELETE' }),
+  },
+  journal: {
+    list: (limit?: number) =>
+      request<JournalEntry[]>(`/api/v1/journal-entries${limit ? `?limit=${limit}` : ''}`),
+    get: (date: string) =>
+      request<JournalEntry>(`/api/v1/journal-entries/${date}`),
+    upsert: (date: string, mood: number, content: string) =>
+      request<JournalEntry>(`/api/v1/journal-entries/${date}`, {
+        method: 'PUT',
+        body: JSON.stringify({ mood, content }),
+      }),
+    delete: (date: string) =>
+      request<void>(`/api/v1/journal-entries/${date}`, { method: 'DELETE' }),
   },
   whatsapp: {
     status: () => request<WhatsAppStatus>('/api/v1/whatsapp/status'),

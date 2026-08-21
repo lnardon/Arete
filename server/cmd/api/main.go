@@ -99,6 +99,7 @@ func main() {
 	habitRepo := repository.NewHabitRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	goalRepo := repository.NewGoalRepository(db)
+	journalRepo := repository.NewJournalRepository(db)
 	whatsappRepo := repository.NewWhatsAppRepository(db)
 	conversationRepo := repository.NewConversationRepository(db)
 	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
@@ -109,13 +110,14 @@ func main() {
 	}
 
 	openaiClient := openai.NewClient(option.WithAPIKey(cfg.OpenAI.APIKey))
-	aiAgent := ai.NewAgent(&openaiClient, cfg.OpenAI.Model, cfg.OpenAI.TranscriptionModel, loc, habitRepo, goalRepo)
+	aiAgent := ai.NewAgent(&openaiClient, cfg.OpenAI.Model, cfg.OpenAI.TranscriptionModel, loc, habitRepo, goalRepo, journalRepo)
 	evoClient := whatsapp.NewClient(cfg.Evolution)
 
 	habitHandler := handlers.NewHabitHandler(habitRepo)
 	completionHandler := handlers.NewCompletionHandler(habitRepo)
 	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
 	goalHandler := handlers.NewGoalHandler(goalRepo)
+	journalHandler := handlers.NewJournalHandler(journalRepo)
 
 	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
 	whatsappRateLimiter := middleware.NewRateLimiter(15, time.Minute)
@@ -134,6 +136,7 @@ func main() {
 		CompletionHandler: completionHandler,
 		AuthHandler:       authHandler,
 		GoalHandler:       goalHandler,
+		JournalHandler:    journalHandler,
 		WhatsAppHandler:   whatsappHandler,
 		AuthService:       authSvc,
 		AllowedOrigin:     cfg.App.AppDomain,

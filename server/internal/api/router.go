@@ -17,6 +17,7 @@ type RouterConfig struct {
 	CompletionHandler *handlers.CompletionHandler
 	AuthHandler       *handlers.AuthHandler
 	GoalHandler       *handlers.GoalHandler
+	JournalHandler    *handlers.JournalHandler
 	WhatsAppHandler   *handlers.WhatsAppHandler
 	AuthService       *auth.Service
 	AllowedOrigin     string
@@ -91,6 +92,10 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/goals/{id}/progress", jwtMiddleware(http.HandlerFunc(config.GoalHandler.AddGoalProgress))).Methods("PATCH")
 	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.UpdateGoal))).Methods("PUT")
 	protected.Handle("/goals/{id}", jwtMiddleware(http.HandlerFunc(config.GoalHandler.DeleteGoal))).Methods("DELETE")
+	protected.Handle("/journal-entries", jwtMiddleware(http.HandlerFunc(config.JournalHandler.ListEntries))).Methods("GET")
+	protected.Handle("/journal-entries/{date}", jwtMiddleware(http.HandlerFunc(config.JournalHandler.GetEntry))).Methods("GET")
+	protected.Handle("/journal-entries/{date}", jwtMiddleware(http.HandlerFunc(config.JournalHandler.UpsertEntry))).Methods("PUT")
+	protected.Handle("/journal-entries/{date}", jwtMiddleware(http.HandlerFunc(config.JournalHandler.DeleteEntry))).Methods("DELETE")
 	protected.Handle("/whatsapp/link/code", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.CreateLinkCode))).Methods("POST")
 	protected.Handle("/whatsapp/status", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Status))).Methods("GET")
 	protected.Handle("/whatsapp/link", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Unlink))).Methods("DELETE")

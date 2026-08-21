@@ -25,6 +25,7 @@ var validGoalTypes = map[string]bool{
 
 var errInvalidPeriodType = errors.New("periodType must be one of: month; quarter; semester; year")
 var errInvalidGoalType = errors.New("goalType must be one of: binary; numeric")
+var errInvalidMood = errors.New("mood must be an integer between 1 and 5")
 
 type toolHandler func(ctx context.Context, args map[string]any) (string, error)
 
@@ -61,7 +62,7 @@ func argInt(args map[string]any, key string) (int, bool) {
 	return int(v), true
 }
 
-func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, userID string, loc *time.Location) ([]openai.ChatCompletionToolUnionParam, map[string]toolHandler) {
+func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, journalRepo *repository.JournalRepository, userID string, loc *time.Location) ([]openai.ChatCompletionToolUnionParam, map[string]toolHandler) {
 	var tools []openai.ChatCompletionToolUnionParam
 	handlers := make(map[string]toolHandler)
 
@@ -342,6 +343,80 @@ func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.Goal
 				return "", err
 			}
 			return jsonResult(map[string]string{"goalId": goalID, "status": "deleted"})
+		},
+	)
+
+	register("list_journal_entries",
+		"List the user's most recent journal entries, most recent first. Use this to answer questions about how the user has been feeling or what they've written about recently.",
+		`{
+			"type": "object",
+			"properties": {
+				"limit": {"type": "integer", "description": "Max number of entries to return, most recent first. Defaults to 14 if omitted."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			limit, ok := argInt(args, "limit")
+			if !ok || limit <= 0 {
+				limit = 14
+			}
+			entries, err := journalRepo.ListEntries(ctx, userID, limit)
+			if err != nil {
+				return "", err
+			}
+			return jsonResult(formatJournalEntries(entries))
+		},
+	)
+
+	register("create_or_update_journal_entry",
+		"Create today's (or a given date's) journal entry, or overwrite it if one already exists for that date. Call this whenever the user shares something about their day — journal entries are one per day, so this always safely creates or edits, never duplicates.",
+		`{
+			"type": "object",
+			"required": ["mood", "content"],
+			"properties": {
+				"entryDate": {"type": "string", "description": "Date in YYYY-MM-DD format. Omit to use today's date (given in the system prompt)."},
+				"mood": {"type": "integer", "description": "Mood rating from 1 (rough day) to 5 (great day), inferred from the user's message unless they state one."},
+				"content": {"type": "string", "description": "The journal entry text — the user's own words about their day, lightly cleaned up but not rewritten or padded out."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			entryDate := argString(args, "entryDate")
+			if entryDate == "" {
+				entryDate = todayIn(loc)
+			}
+			mood, ok := argInt(args, "mood")
+			if !ok || mood < 1 || mood > 5 {
+				return "", errInvalidMood
+			}
+			content := argString(args, "content")
+			if content == "" {
+				return "", errors.New("content is required")
+			}
+			entry, err := journalRepo.UpsertEntry(ctx, userID, entryDate, mood, content)
+			if err != nil {
+				return "", err
+			}
+			return jsonResult(formatJournalEntry(entry))
+		},
+	)
+
+	register("delete_journal_entry",
+		"Permanently delete the journal entry for a given date. This cannot be undone. Only call this after the user has explicitly confirmed the deletion in this conversation — if you haven't asked yet, ask first instead of calling this tool.",
+		`{
+			"type": "object",
+			"required": ["entryDate"],
+			"properties": {
+				"entryDate": {"type": "string", "description": "Date of the entry to delete, in YYYY-MM-DD format."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			entryDate := argString(args, "entryDate")
+			if entryDate == "" {
+				return "", errors.New("entryDate is required")
+			}
+			if err := journalRepo.DeleteEntry(ctx, userID, entryDate); err != nil {
+				return "", err
+			}
+			return jsonResult(map[string]string{"entryDate": entryDate, "status": "deleted"})
 		},
 	)
 

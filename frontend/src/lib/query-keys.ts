@@ -8,6 +8,11 @@ export const queryKeys = {
     list: (periodType: string, periodKey: string) =>
       [...queryKeys.goals.all, periodType, periodKey] as const,
   },
+  journal: {
+    all: ['journal'] as const,
+    list: (limit?: number) => [...queryKeys.journal.all, 'list', limit ?? null] as const,
+    entry: (date: string) => [...queryKeys.journal.all, 'entry', date] as const,
+  },
   completions: {
     all: ['completions'] as const,
     forDate: (date: string) => [...queryKeys.completions.all, 'date', date] as const,

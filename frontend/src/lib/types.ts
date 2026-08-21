@@ -25,6 +25,32 @@ export interface Goal {
   createdAt: string
 }
 
+export interface JournalEntry {
+  id: string
+  userId: string
+  entryDate: string // YYYY-MM-DD
+  mood: number // 1-5
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+export const MOOD_EMOJI: Record<number, string> = {
+  1: '😞',
+  2: '😕',
+  3: '😐',
+  4: '🙂',
+  5: '😄',
+}
+
+export const MOOD_LABEL: Record<number, string> = {
+  1: 'Rough',
+  2: 'Meh',
+  3: 'Okay',
+  4: 'Good',
+  5: 'Great',
+}
+
 export type WhatsAppStatus =
   | { linked: false }
   | { linked: true; phoneNumberMasked: string; linkedAt: string }
