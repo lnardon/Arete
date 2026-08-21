@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -19,10 +19,19 @@ export function GoalProgressItem({ goal, onAddProgress, onDelete, onEdit, pendin
   return (
     <div
       className={cn(
-        "group flex items-center gap-4 px-4 py-3.5 bg-card border border-border rounded-xl transition-all",
+        "group flex w-full items-center gap-4 px-4 py-3.5 bg-card border border-border rounded-xl transition-all",
         goal.completed && "bg-muted/60"
       )}
     >
+      <Button
+        variant="outline"
+        onClick={() => onAddProgress(goal.id)}
+        disabled={pending}
+        className="h-9 min-w-9 px-2.5 rounded-lg border-foreground/20 text-sm font-semibold tabular-nums shrink-0"
+        aria-label="Add 1 to progress"
+      >
+        +1
+      </Button>
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <span
@@ -39,37 +48,25 @@ export function GoalProgressItem({ goal, onAddProgress, onDelete, onEdit, pendin
         </div>
         <Progress value={percent} />
       </div>
-      <div className="flex items-center gap-0.5 shrink-0">
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <Button
-          variant="outline"
-          size="icon-sm"
-          onClick={() => onAddProgress(goal.id)}
-          disabled={pending}
-          className="border-foreground/20"
-          aria-label="Add progress"
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit(goal)}
+          className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-transparent"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Pencil className="w-3.5 h-3.5" />
+          <span className="sr-only">Edit</span>
         </Button>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(goal)}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-transparent"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-            <span className="sr-only">Edit</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(goal.id)}
-            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-transparent"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="sr-only">Delete</span>
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(goal.id)}
+          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-transparent"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          <span className="sr-only">Delete</span>
+        </Button>
       </div>
     </div>
   )
