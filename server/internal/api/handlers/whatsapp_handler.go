@@ -327,7 +327,7 @@ func (h *WhatsAppHandler) handleUnlinkedMessage(ctx context.Context, msg inbound
 			h.sendBestEffort(msg.PhoneNumber, "Sorry, I hit an error linking your account — try again in a moment.")
 			return
 		}
-		h.sendBestEffort(msg.PhoneNumber, "✅ Linked! You can now ask me about your habits and goals right here.")
+		h.sendBestEffort(msg.PhoneNumber, "Linked! You can now ask me about your habits and goals right here.")
 		return
 	}
 
