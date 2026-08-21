@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAchievementsRouteImport } from './routes/_app.achievements'
 import { Route as AppGoalsRouteImport } from './routes/_app.goals'
+import { Route as AppHabitsRouteImport } from './routes/_app.habits'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppStatisticsRouteImport } from './routes/_app.statistics'
@@ -41,6 +42,11 @@ const AppAchievementsRoute = AppAchievementsRouteImport.update({
 const AppGoalsRoute = AppGoalsRouteImport.update({
   id: '/goals',
   path: '/goals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHabitsRoute = AppHabitsRouteImport.update({
+  id: '/habits',
+  path: '/habits',
   getParentRoute: () => AppRoute,
 } as any)
 const AppJournalRoute = AppJournalRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/achievements': typeof AppAchievementsRoute
   '/goals': typeof AppGoalsRoute
+  '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
   '/settings': typeof AppSettingsRoute
   '/statistics': typeof AppStatisticsRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/achievements': typeof AppAchievementsRoute
   '/goals': typeof AppGoalsRoute
+  '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
   '/settings': typeof AppSettingsRoute
   '/statistics': typeof AppStatisticsRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_app/achievements': typeof AppAchievementsRoute
   '/_app/goals': typeof AppGoalsRoute
+  '/_app/habits': typeof AppHabitsRoute
   '/_app/journal': typeof AppJournalRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistics': typeof AppStatisticsRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/goals'
+    | '/habits'
     | '/journal'
     | '/settings'
     | '/statistics'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/goals'
+    | '/habits'
     | '/journal'
     | '/settings'
     | '/statistics'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_app/achievements'
     | '/_app/goals'
+    | '/_app/habits'
     | '/_app/journal'
     | '/_app/settings'
     | '/_app/statistics'
@@ -179,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppGoalsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/habits': {
+      id: '/_app/habits'
+      path: '/habits'
+      fullPath: '/habits'
+      preLoaderRoute: typeof AppHabitsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/journal': {
       id: '/_app/journal'
       path: '/journal'
@@ -220,6 +239,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAchievementsRoute: typeof AppAchievementsRoute
   AppGoalsRoute: typeof AppGoalsRoute
+  AppHabitsRoute: typeof AppHabitsRoute
   AppJournalRoute: typeof AppJournalRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatisticsRoute: typeof AppStatisticsRoute
@@ -229,6 +249,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAchievementsRoute: AppAchievementsRoute,
   AppGoalsRoute: AppGoalsRoute,
+  AppHabitsRoute: AppHabitsRoute,
   AppJournalRoute: AppJournalRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatisticsRoute: AppStatisticsRoute,

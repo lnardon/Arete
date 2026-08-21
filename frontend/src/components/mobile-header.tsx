@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
-import { Home, BarChart2, Trophy, Target, BookOpen, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { LayoutDashboard, ListChecks, BarChart2, Trophy, Target, BookOpen, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { useAuth } from "@/lib/auth"
 import { useQueryClient } from "@tanstack/react-query"
@@ -21,11 +21,12 @@ export function MobileHeader() {
   const queryClient = useQueryClient()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
-  const isHome = pathname === "/"
-  const isStats = pathname === "/statistics"
-  const isAchievements = pathname === "/achievements"
+  const isDashboard = pathname === "/"
+  const isHabits = pathname === "/habits"
   const isGoals = pathname === "/goals"
   const isJournal = pathname === "/journal"
+  const isStats = pathname === "/statistics"
+  const isAchievements = pathname === "/achievements"
   const isSettings = pathname === "/settings"
 
   async function handleSignOut() {
@@ -59,25 +60,18 @@ export function MobileHeader() {
           <span className="sr-only">Open menu</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 text-sm border border-white p-2">
-          <DropdownMenuItem className={isHome ? "font-semibold" : ""}>
+          <DropdownMenuItem className={isDashboard ? "font-semibold" : ""}>
             <Link to="/" className="flex items-center gap-2 w-full">
-              <Home className="w-4 h-4" />
-              Today
-              {isHome && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+              {isDashboard && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className={isStats ? "font-semibold" : ""}>
-            <Link to="/statistics" className="flex items-center gap-2 w-full">
-              <BarChart2 className="w-4 h-4" />
-              Statistics
-              {isStats && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem className={isAchievements ? "font-semibold" : ""}>
-            <Link to="/achievements" className="flex items-center gap-2 w-full">
-              <Trophy className="w-4 h-4" />
-              Achievements
-              {isAchievements && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+          <DropdownMenuItem className={isHabits ? "font-semibold" : ""}>
+            <Link to="/habits" className="flex items-center gap-2 w-full">
+              <ListChecks className="w-4 h-4" />
+              Habits
+              {isHabits && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className={isGoals ? "font-semibold" : ""}>
@@ -92,6 +86,21 @@ export function MobileHeader() {
               <BookOpen className="w-4 h-4" />
               Journal
               {isJournal && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className={isStats ? "font-semibold" : ""}>
+            <Link to="/statistics" className="flex items-center gap-2 w-full">
+              <BarChart2 className="w-4 h-4" />
+              Statistics
+              {isStats && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={isAchievements ? "font-semibold" : ""}>
+            <Link to="/achievements" className="flex items-center gap-2 w-full">
+              <Trophy className="w-4 h-4" />
+              Achievements
+              {isAchievements && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className={isSettings ? "font-semibold" : ""}>

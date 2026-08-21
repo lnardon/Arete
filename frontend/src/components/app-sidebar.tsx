@@ -1,17 +1,45 @@
-import { BarChart3, BookOpen, LayoutDashboard, Settings, Target, Trophy } from "lucide-react"
+import { BarChart3, BookOpen, LayoutDashboard, ListChecks, Settings, Target, Trophy } from "lucide-react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { SignOutButton } from "@/components/sign-out-button"
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Today", href: "/" },
-  { icon: BarChart3, label: "Statistics", href: "/statistics" },
-  { icon: Trophy, label: "Achievements", href: "/achievements" },
+interface NavItem {
+  icon: typeof LayoutDashboard
+  label: string
+  href: string
+}
+
+const trunkItem: NavItem = { icon: LayoutDashboard, label: "Dashboard", href: "/" }
+
+const branchItems: NavItem[] = [
+  { icon: ListChecks, label: "Habits", href: "/habits" },
   { icon: Target, label: "Goals", href: "/goals" },
   { icon: BookOpen, label: "Journal", href: "/journal" },
+]
+
+const extraItems: NavItem[] = [
+  { icon: BarChart3, label: "Statistics", href: "/statistics" },
+  { icon: Trophy, label: "Achievements", href: "/achievements" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
+
+function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+  return (
+    <Link
+      to={item.href}
+      className={cn(
+        "flex items-center gap-3 w-full px-3 py-2.5 text-sm tracking-wide transition-colors rounded-md",
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
+      )}
+    >
+      <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+      <span>{item.label}</span>
+    </Link>
+  )
+}
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname }) ?? "/"
@@ -32,30 +60,39 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <p className="px-3 mb-3 label-section text-sidebar-foreground/50">
-          Navigation
+          Overview
+        </p>
+
+        <NavLink item={trunkItem} isActive={pathname === trunkItem.href} />
+
+        <div className="relative ml-5 pl-4 mt-0.5 border-l border-sidebar-border">
+          <span className="absolute -left-[3px] top-0 w-1.5 h-1.5 -translate-x-1/2 rounded-full bg-sidebar-border" />
+          <ul className="flex flex-col gap-0.5">
+            {branchItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <li key={item.href} className="relative">
+                  <span className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-px bg-sidebar-border" />
+                  <NavLink item={item} isActive={isActive} />
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+
+        <div className="my-4 h-px bg-sidebar-border" />
+
+        <p className="px-3 mb-3 label-section text-sidebar-foreground/50">
+          Extras
         </p>
         <ul className="flex flex-col gap-0.5">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <li key={item.label}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 w-full px-3 py-2.5 text-sm tracking-wide transition-colors rounded-md",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
-                  )}
-                >
-                  <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            )
-          })}
+          {extraItems.map((item) => (
+            <li key={item.href}>
+              <NavLink item={item} isActive={pathname === item.href} />
+            </li>
+          ))}
         </ul>
       </nav>
 
