@@ -8,7 +8,7 @@ import { PomodoroHistoryList } from "@/components/pomodoro-history-list"
 export function PomodoroView() {
   return (
     <main className="flex-1 overflow-y-auto bg-background">
-      <div className="max-w-5xl mx-auto px-5 py-8 md:px-8 md:py-12">
+      <div className="p-16">
         <div className="mb-6">
           <h1 className="font-display text-2xl font-semibold tracking-tight">Pomodoro</h1>
           <p className="text-sm text-muted-foreground mt-1">

@@ -98,7 +98,7 @@ export function WeeklyChart({ habits, completions }: { habits: Habit[], completi
             />
             <Bar
               dataKey="completed"
-              fill="var(--foreground)"
+              fill="var(--secondary)"
               name="Completed"
               stackId="a"
               radius={[0, 0, 0, 0]}

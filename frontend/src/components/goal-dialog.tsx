@@ -157,15 +157,11 @@ export function GoalDialog({ open, onOpenChange, goal, onSave }: GoalDialogProps
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-foreground/20 text-foreground bg-transparent hover:text-red-600"
+              className="border-foreground/20 text-foreground bg-transparent hover:text-destructive"
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="bg-foreground text-background hover:bg-foreground/80"
-            >
+            <Button type="submit" disabled={!canSubmit}>
               {goal ? "Save Changes" : "Add Goal"}
             </Button>
           </DialogFooter>

@@ -45,7 +45,7 @@ export function HabitBreakdown({ habits, completions }: { habits: Habit[], compl
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-foreground transition-all duration-500 ease-out"
+                className="h-full rounded-full bg-secondary transition-all duration-500 ease-out"
                 style={{ width: `${item.rate}%` }}
               />
             </div>

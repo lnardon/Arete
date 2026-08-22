@@ -55,7 +55,7 @@ export default function JournalPage() {
       <div className="flex flex-col flex-1 min-w-0">
         <MobileHeader />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-5 py-8 md:px-8 md:py-12">
+          <div className="p-16">
             <div className="flex items-start justify-between gap-4 mb-2">
               <div>
                 <h2 className="font-display text-2xl font-semibold tracking-wide text-foreground text-balance">
@@ -67,7 +67,7 @@ export default function JournalPage() {
               </div>
               {streak > 0 && (
                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground shrink-0 mt-1.5">
-                  <Flame className="w-4 h-4 text-orange-500" strokeWidth={1.5} />
+                  <Flame className="w-4 h-4 text-primary" strokeWidth={1.5} fill="currentColor" />
                   <span className="tabular-nums">
                     {streak} day{streak === 1 ? "" : "s"}
                   </span>

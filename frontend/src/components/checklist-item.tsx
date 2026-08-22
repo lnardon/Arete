@@ -31,7 +31,7 @@ export function ChecklistItem({
         id={id}
         checked={checked}
         onCheckedChange={onCheckedChange}
-        className="h-5 w-5 shrink-0 border-foreground/30 data-[state=checked]:bg-foreground data-[state=checked]:text-background"
+        className="h-5 w-5 shrink-0 border-foreground/30 data-checked:border-secondary data-checked:bg-secondary data-checked:text-secondary-foreground"
       />
       <label
         htmlFor={id}

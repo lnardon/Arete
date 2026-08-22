@@ -66,7 +66,7 @@ function TodayHabitRow({ habit, date, completions }: { habit: Habit; date: strin
         id={`dashboard-habit-${habit.id}`}
         checked={completed}
         onCheckedChange={() => toggle.mutate({ habitId: habit.id, date })}
-        className="h-5 w-5 shrink-0 border-foreground/30 data-[state=checked]:bg-foreground data-[state=checked]:text-background"
+        className="h-5 w-5 shrink-0 border-foreground/30 data-checked:border-secondary data-checked:bg-secondary data-checked:text-secondary-foreground"
       />
       <span
         className={cn(
@@ -151,7 +151,7 @@ export default function DashboardPage() {
       <div className="flex flex-col flex-1 min-w-0">
         <MobileHeader />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-5 py-8 md:px-8 md:py-12">
+          <div className="p-16">
             <div className="mb-2">
               <h2 className="font-display text-2xl font-semibold tracking-wide text-foreground text-balance">
                 Dashboard
@@ -232,7 +232,12 @@ export default function DashboardPage() {
               to="/journal"
               className="flex items-center gap-4 px-5 py-4 border border-border rounded-2xl bg-card card-elevated hover:bg-muted/40 transition-colors"
             >
-              <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                  todayEntry ? "bg-foreground/10" : "bg-primary text-primary-foreground"
+                )}
+              >
                 {todayEntry ? (
                   <BookOpen className="w-5 h-5" strokeWidth={1.5} />
                 ) : (

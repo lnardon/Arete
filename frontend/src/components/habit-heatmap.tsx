@@ -46,10 +46,8 @@ interface DayData {
 function getIntensityClass(ratio: number, total: number): string {
   if (total === 0) return "bg-muted"
   if (ratio === 0) return "bg-muted"
-  if (ratio <= 0.25) return "bg-foreground/15"
-  if (ratio <= 0.5) return "bg-foreground/30"
-  if (ratio <= 0.75) return "bg-foreground/55"
-  return "bg-foreground/90"
+  if (ratio < 1) return "bg-primary"
+  return "bg-secondary"
 }
 
 export function HabitHeatmap({ habits, completions }: { habits: Habit[], completions: HabitCompletion[] }) {
@@ -128,10 +126,8 @@ export function HabitHeatmap({ habits, completions }: { habits: Habit[], complet
           </span>
           <div className="flex gap-0.5">
             <div className="w-2.5 h-2.5 bg-muted" />
-            <div className="w-2.5 h-2.5 bg-foreground/15" />
-            <div className="w-2.5 h-2.5 bg-foreground/30" />
-            <div className="w-2.5 h-2.5 bg-foreground/55" />
-            <div className="w-2.5 h-2.5 bg-foreground/90" />
+            <div className="w-2.5 h-2.5 bg-primary" />
+            <div className="w-2.5 h-2.5 bg-secondary" />
           </div>
           <span className="text-[10px] text-muted-foreground">
             More

@@ -22,7 +22,7 @@ export function MoodPicker({ value, onChange }: MoodPickerProps) {
           className={cn(
             "flex h-11 w-11 items-center justify-center rounded-lg border text-xl transition-colors",
             value === mood
-              ? "border-foreground/40 bg-foreground/10"
+              ? "border-primary bg-primary"
               : "border-border hover:bg-muted"
           )}
         >

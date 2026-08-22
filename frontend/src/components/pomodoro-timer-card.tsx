@@ -122,9 +122,7 @@ export function PomodoroTimerCard() {
                   }}
                   className={cn(
                     "flex-1",
-                    plannedMinutes === minutes && !customMinutes
-                      ? "bg-foreground text-background hover:bg-foreground/80"
-                      : "border-foreground/20 bg-transparent hover:bg-muted"
+                    (plannedMinutes !== minutes || customMinutes) && "border-foreground/20 bg-transparent hover:bg-muted"
                   )}
                   variant={plannedMinutes === minutes && !customMinutes ? undefined : "outline"}
                 >
@@ -146,12 +144,7 @@ export function PomodoroTimerCard() {
         <Button
           size="lg"
           onClick={isActive ? handleStop : handleStart}
-          className={cn(
-            "gap-2 px-8",
-            isActive
-              ? "bg-destructive text-destructive-foreground hover:bg-destructive/80"
-              : "bg-foreground text-background hover:bg-foreground/80"
-          )}
+          className={cn("gap-2 px-8", isActive && "bg-destructive text-destructive-foreground hover:bg-destructive/80")}
         >
           {isActive ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           {isActive ? "Stop" : "Start"}

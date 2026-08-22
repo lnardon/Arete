@@ -27,10 +27,7 @@ export function EmptyState({ onAdd }: EmptyStateProps) {
       <p className="text-sm text-muted-foreground mb-6 text-center max-w-xs">
         Begin your journey of discipline by defining your first daily practice
       </p>
-      <Button
-        onClick={onAdd}
-        className="bg-foreground text-background hover:bg-foreground/80 rounded-xl"
-      >
+      <Button onClick={onAdd} className="rounded-xl">
         <Plus className="w-4 h-4 mr-2" />
         Create First Habit
       </Button>

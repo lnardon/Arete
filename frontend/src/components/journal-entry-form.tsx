@@ -45,7 +45,7 @@ export function JournalEntryForm({
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="border-foreground/20 text-foreground bg-transparent hover:text-red-600"
+            className="border-foreground/20 text-foreground bg-transparent hover:text-destructive"
           >
             Cancel
           </Button>
@@ -54,7 +54,6 @@ export function JournalEntryForm({
           type="button"
           disabled={!canSubmit || pending}
           onClick={() => mood !== null && onSave(mood, content.trim())}
-          className="bg-foreground text-background hover:bg-foreground/80"
         >
           {saveLabel}
         </Button>

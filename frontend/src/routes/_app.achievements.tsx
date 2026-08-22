@@ -63,7 +63,7 @@ export default function AchievementsPage() {
       <div className="flex flex-col flex-1 min-w-0">
         <MobileHeader />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-5 py-8 md:px-8 md:py-12">
+          <div className="p-16">
             <div className="mb-2">
               <h2 className="font-display text-2xl font-semibold tracking-wide text-foreground text-balance">
                 Achievements
@@ -96,7 +96,7 @@ export default function AchievementsPage() {
                 </p>
                 <div className="w-32 h-1.5 rounded-full bg-border">
                   <div
-                    className="h-full rounded-full bg-foreground transition-all duration-500"
+                    className="h-full rounded-full bg-primary transition-all duration-500"
                     style={{
                       width: `${total > 0 ? (unlocked / total) * 100 : 0}%`,
                     }}
