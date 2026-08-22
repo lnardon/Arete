@@ -51,6 +51,27 @@ export const MOOD_LABEL: Record<number, string> = {
   5: 'Great',
 }
 
+export interface PomodoroProject {
+  id: string
+  name: string
+  color: string
+  createdAt: string
+}
+
+export interface PomodoroEntry {
+  id: string
+  projectId: string | null
+  plannedMinutes: number
+  startedAt: string
+  endedAt: string | null
+  localDate: string // YYYY-MM-DD
+  createdAt: string
+}
+
+export type ActiveTimer =
+  | { active: false }
+  | { active: true; entry: PomodoroEntry }
+
 export type WhatsAppStatus =
   | { linked: false }
   | { linked: true; phoneNumberMasked: string; linkedAt: string }

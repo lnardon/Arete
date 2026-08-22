@@ -1,5 +1,6 @@
 // Package ai wires the OpenAI Chat Completions tool-calling loop to Arete's
-// habit and goal repositories, scoped per-user, for the WhatsApp assistant.
+// habit, goal, journal, and pomodoro repositories, scoped per-user, for the
+// WhatsApp assistant.
 package ai
 
 import (
@@ -36,6 +37,8 @@ Goals are binary (a single done/not-done checkbox, use toggle_goal) or numeric (
 
 Journal tool results (list_journal_entries, create_or_update_journal_entry) include the same kind of ready-made "formatted" block: the bold date, then "(mood N/5)", then the entry text on the next line. Reuse it verbatim, same as goal blocks.
 
+Pomodoro tools (list_pomodoro_projects, create_pomodoro_project, get_active_timer, start_pomodoro_timer, stop_pomodoro_timer, list_pomodoro_entries) track focused-work time against optional projects. Only one timer can run at a time — if start_pomodoro_timer fails because one is already active, tell the user and ask whether to stop it first rather than retrying. Default to a 25 minute timer if the user doesn't give a length. Active-timer and entry tool results include a ready-made "formatted" block like the goal/journal ones above — reuse it verbatim.
+
 When the user shares how their day went — even in passing, not just when they explicitly say "journal this" — log it with create_or_update_journal_entry: infer a mood from 1 (rough) to 5 (great) from their tone, and use their own words (lightly cleaned up, not rewritten or padded) as the content. Only ask them to state a mood explicitly if the message is genuinely ambiguous. If they send more about the same day later, call the tool again for that date — it overwrites the existing entry rather than creating a duplicate, so there's never a need to check whether one already exists first.
 
 Before deleting a habit, goal, or journal entry, ask the user to confirm in plain language and wait for their reply — only call a delete tool after they've explicitly said yes in this conversation.`
@@ -61,10 +64,11 @@ type Agent struct {
 	habitRepo          *repository.HabitRepository
 	goalRepo           *repository.GoalRepository
 	journalRepo        *repository.JournalRepository
+	pomodoroRepo       *repository.PomodoroRepository
 }
 
-func NewAgent(client *openai.Client, model, transcriptionModel string, location *time.Location, habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, journalRepo *repository.JournalRepository) *Agent {
-	return &Agent{client: client, model: model, transcriptionModel: transcriptionModel, location: location, habitRepo: habitRepo, goalRepo: goalRepo, journalRepo: journalRepo}
+func NewAgent(client *openai.Client, model, transcriptionModel string, location *time.Location, habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, journalRepo *repository.JournalRepository, pomodoroRepo *repository.PomodoroRepository) *Agent {
+	return &Agent{client: client, model: model, transcriptionModel: transcriptionModel, location: location, habitRepo: habitRepo, goalRepo: goalRepo, journalRepo: journalRepo, pomodoroRepo: pomodoroRepo}
 }
 
 func (a *Agent) Transcribe(ctx context.Context, audio []byte, filename string) (string, error) {
@@ -83,7 +87,7 @@ func (a *Agent) Transcribe(ctx context.Context, audio []byte, filename string) (
 }
 
 func (a *Agent) ProcessMessage(ctx context.Context, userID string, history []openai.ChatCompletionMessageParamUnion, userText string) (string, error) {
-	tools, handlers := buildTools(a.habitRepo, a.goalRepo, a.journalRepo, userID, a.location)
+	tools, handlers := buildTools(a.habitRepo, a.goalRepo, a.journalRepo, a.pomodoroRepo, userID, a.location)
 
 	system := systemInstructions + "\n\nToday's date is " + time.Now().In(a.location).Format("Monday, 2006-01-02") + "."
 

@@ -19,6 +19,13 @@ export const queryKeys = {
     forRange: (start: string, end: string) =>
       [...queryKeys.completions.all, 'range', start, end] as const,
   },
+  pomodoro: {
+    all: ['pomodoro'] as const,
+    projects: () => [...queryKeys.pomodoro.all, 'projects'] as const,
+    active: () => [...queryKeys.pomodoro.all, 'active'] as const,
+    entries: (start: string, end: string, projectId?: string) =>
+      [...queryKeys.pomodoro.all, 'entries', start, end, projectId ?? null] as const,
+  },
   whatsapp: {
     all: ['whatsapp'] as const,
     status: () => [...queryKeys.whatsapp.all, 'status'] as const,

@@ -1,4 +1,4 @@
-import type { Goal, GoalType, Habit, HabitCompletion, JournalEntry, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
+import type { ActiveTimer, Goal, GoalType, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -75,6 +75,41 @@ export const api = {
       }),
     delete: (date: string) =>
       request<void>(`/api/v1/journal-entries/${date}`, { method: 'DELETE' }),
+  },
+  pomodoro: {
+    projects: {
+      list: () =>
+        request<PomodoroProject[]>('/api/v1/pomodoro/projects'),
+      create: (name: string, color: string) =>
+        request<PomodoroProject>('/api/v1/pomodoro/projects', {
+          method: 'POST',
+          body: JSON.stringify({ name, color }),
+        }),
+      update: (id: string, name: string, color: string) =>
+        request<PomodoroProject>(`/api/v1/pomodoro/projects/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ name, color }),
+        }),
+      delete: (id: string) =>
+        request<void>(`/api/v1/pomodoro/projects/${id}`, { method: 'DELETE' }),
+    },
+    active: () =>
+      request<ActiveTimer>('/api/v1/pomodoro/active'),
+    start: (projectId: string | null, plannedMinutes: number, localDate: string) =>
+      request<PomodoroEntry>('/api/v1/pomodoro/start', {
+        method: 'POST',
+        body: JSON.stringify({ projectId, plannedMinutes, localDate }),
+      }),
+    stop: () =>
+      request<PomodoroEntry>('/api/v1/pomodoro/stop', { method: 'POST' }),
+    entries: {
+      list: (start: string, end: string, projectId?: string) =>
+        request<PomodoroEntry[]>(
+          `/api/v1/pomodoro/entries?start=${start}&end=${end}${projectId ? `&projectId=${projectId}` : ''}`
+        ),
+      delete: (id: string) =>
+        request<void>(`/api/v1/pomodoro/entries/${id}`, { method: 'DELETE' }),
+    },
   },
   whatsapp: {
     status: () => request<WhatsAppStatus>('/api/v1/whatsapp/status'),

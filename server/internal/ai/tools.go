@@ -62,7 +62,7 @@ func argInt(args map[string]any, key string) (int, bool) {
 	return int(v), true
 }
 
-func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, journalRepo *repository.JournalRepository, userID string, loc *time.Location) ([]openai.ChatCompletionToolUnionParam, map[string]toolHandler) {
+func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.GoalRepository, journalRepo *repository.JournalRepository, pomodoroRepo *repository.PomodoroRepository, userID string, loc *time.Location) ([]openai.ChatCompletionToolUnionParam, map[string]toolHandler) {
 	var tools []openai.ChatCompletionToolUnionParam
 	handlers := make(map[string]toolHandler)
 
@@ -417,6 +417,133 @@ func buildTools(habitRepo *repository.HabitRepository, goalRepo *repository.Goal
 				return "", err
 			}
 			return jsonResult(map[string]string{"entryDate": entryDate, "status": "deleted"})
+		},
+	)
+
+	register("list_pomodoro_projects",
+		"List the user's pomodoro/time-tracking projects. Takes no input.",
+		`{"type": "object", "properties": {}}`,
+		func(ctx context.Context, _ map[string]any) (string, error) {
+			projects, err := pomodoroRepo.ListProjects(ctx, userID)
+			if err != nil {
+				return "", err
+			}
+			return jsonResult(projects)
+		},
+	)
+
+	register("create_pomodoro_project",
+		"Create a new project to track focused-work time against (e.g. 'Client work', 'Reading'). Call this when the user wants to start tracking time for something new that doesn't already have a project.",
+		`{
+			"type": "object",
+			"required": ["name"],
+			"properties": {
+				"name": {"type": "string", "description": "The project's name."},
+				"color": {"type": "string", "description": "Hex color like #6366f1 for the project's tag/chart color. Optional — a default is used if omitted."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			name := argString(args, "name")
+			if name == "" {
+				return "", errors.New("name is required")
+			}
+			color := argString(args, "color")
+			if color == "" {
+				color = "#6366f1"
+			}
+			project, err := pomodoroRepo.CreateProject(ctx, userID, name, color)
+			if err != nil {
+				return "", err
+			}
+			return jsonResult(project)
+		},
+	)
+
+	register("get_active_timer",
+		"Check whether the user currently has a pomodoro timer running, and if so since when and for how long it was planned. Takes no input.",
+		`{"type": "object", "properties": {}}`,
+		func(ctx context.Context, _ map[string]any) (string, error) {
+			entry, err := pomodoroRepo.GetActiveEntry(ctx, userID)
+			if err != nil {
+				return "", err
+			}
+			if entry == nil {
+				return jsonResult(map[string]bool{"active": false})
+			}
+			return jsonResult(map[string]any{"active": true, "entry": formatPomodoroEntry(*entry)})
+		},
+	)
+
+	register("start_pomodoro_timer",
+		"Start a new pomodoro/focus timer, optionally against a project. Only one timer can run at a time — this fails if one is already active; check get_active_timer or stop_pomodoro_timer first if you're not sure.",
+		`{
+			"type": "object",
+			"properties": {
+				"projectId": {"type": "string", "description": "The ID of the project to track this time against (from list_pomodoro_projects). Omit to leave uncategorized."},
+				"durationMinutes": {"type": "integer", "description": "Planned length of the timer in minutes. Defaults to 25 if omitted."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			var projectID *string
+			if v := argString(args, "projectId"); v != "" {
+				projectID = &v
+			}
+			duration, ok := argInt(args, "durationMinutes")
+			if !ok || duration <= 0 {
+				duration = 25
+			}
+			entry, err := pomodoroRepo.StartEntry(ctx, userID, projectID, duration, todayIn(loc))
+			if err != nil {
+				if errors.Is(err, repository.ErrActiveEntryExists) {
+					return "", errors.New("a timer is already running — stop it first with stop_pomodoro_timer, or ask the user if they want to")
+				}
+				return "", err
+			}
+			return jsonResult(formatPomodoroEntry(entry))
+		},
+	)
+
+	register("stop_pomodoro_timer",
+		"Stop the user's currently running pomodoro timer, recording the actual elapsed time. Takes no input.",
+		`{"type": "object", "properties": {}}`,
+		func(ctx context.Context, _ map[string]any) (string, error) {
+			entry, err := pomodoroRepo.StopActiveEntry(ctx, userID)
+			if err != nil {
+				if errors.Is(err, repository.ErrNotFound) {
+					return "", errors.New("no timer is currently running")
+				}
+				return "", err
+			}
+			return jsonResult(formatPomodoroEntry(entry))
+		},
+	)
+
+	register("list_pomodoro_entries",
+		"List the user's completed and in-progress pomodoro entries within a date range. Use this to answer questions like 'how much did I focus this week' or 'how much time did I spend on X project'.",
+		`{
+			"type": "object",
+			"required": ["startDate", "endDate"],
+			"properties": {
+				"startDate": {"type": "string", "description": "Start date in YYYY-MM-DD format (inclusive)."},
+				"endDate": {"type": "string", "description": "End date in YYYY-MM-DD format (inclusive)."},
+				"projectId": {"type": "string", "description": "Optional project ID (from list_pomodoro_projects) to filter to a single project."}
+			}
+		}`,
+		func(ctx context.Context, args map[string]any) (string, error) {
+			start := argString(args, "startDate")
+			end := argString(args, "endDate")
+			if start == "" || end == "" {
+				return "", errors.New("startDate and endDate are required")
+			}
+			var projectID *string
+			if v := argString(args, "projectId"); v != "" {
+				projectID = &v
+			}
+			entries, err := pomodoroRepo.ListEntries(ctx, userID, start, end, projectID)
+			if err != nil {
+				return "", err
+			}
+			return jsonResult(formatPomodoroEntries(entries))
 		},
 	)
 

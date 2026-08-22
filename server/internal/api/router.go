@@ -12,16 +12,18 @@ import (
 )
 
 type RouterConfig struct {
-	StaticDir         string
-	HabitHandler      *handlers.HabitHandler
-	CompletionHandler *handlers.CompletionHandler
-	AuthHandler       *handlers.AuthHandler
-	GoalHandler       *handlers.GoalHandler
-	JournalHandler    *handlers.JournalHandler
-	WhatsAppHandler   *handlers.WhatsAppHandler
-	AuthService       *auth.Service
-	AllowedOrigin     string
-	RateLimiter       *middleware.RateLimiter
+	StaticDir              string
+	HabitHandler           *handlers.HabitHandler
+	CompletionHandler      *handlers.CompletionHandler
+	AuthHandler            *handlers.AuthHandler
+	GoalHandler            *handlers.GoalHandler
+	JournalHandler         *handlers.JournalHandler
+	PomodoroProjectHandler *handlers.PomodoroProjectHandler
+	PomodoroTimerHandler   *handlers.PomodoroTimerHandler
+	WhatsAppHandler        *handlers.WhatsAppHandler
+	AuthService            *auth.Service
+	AllowedOrigin          string
+	RateLimiter            *middleware.RateLimiter
 }
 
 // Serves static files and falls back to index.html for SPA client-side routes.
@@ -96,6 +98,15 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/journal-entries/{date}", jwtMiddleware(http.HandlerFunc(config.JournalHandler.GetEntry))).Methods("GET")
 	protected.Handle("/journal-entries/{date}", jwtMiddleware(http.HandlerFunc(config.JournalHandler.UpsertEntry))).Methods("PUT")
 	protected.Handle("/journal-entries/{date}", jwtMiddleware(http.HandlerFunc(config.JournalHandler.DeleteEntry))).Methods("DELETE")
+	protected.Handle("/pomodoro/projects", jwtMiddleware(http.HandlerFunc(config.PomodoroProjectHandler.ListProjects))).Methods("GET")
+	protected.Handle("/pomodoro/projects", jwtMiddleware(http.HandlerFunc(config.PomodoroProjectHandler.CreateProject))).Methods("POST")
+	protected.Handle("/pomodoro/projects/{id}", jwtMiddleware(http.HandlerFunc(config.PomodoroProjectHandler.UpdateProject))).Methods("PUT")
+	protected.Handle("/pomodoro/projects/{id}", jwtMiddleware(http.HandlerFunc(config.PomodoroProjectHandler.DeleteProject))).Methods("DELETE")
+	protected.Handle("/pomodoro/active", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.GetActive))).Methods("GET")
+	protected.Handle("/pomodoro/start", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.Start))).Methods("POST")
+	protected.Handle("/pomodoro/stop", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.Stop))).Methods("POST")
+	protected.Handle("/pomodoro/entries", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.ListEntries))).Methods("GET")
+	protected.Handle("/pomodoro/entries/{id}", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.DeleteEntry))).Methods("DELETE")
 	protected.Handle("/whatsapp/link/code", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.CreateLinkCode))).Methods("POST")
 	protected.Handle("/whatsapp/status", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Status))).Methods("GET")
 	protected.Handle("/whatsapp/link", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Unlink))).Methods("DELETE")

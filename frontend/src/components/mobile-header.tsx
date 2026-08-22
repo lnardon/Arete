@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
-import { LayoutDashboard, ListChecks, BarChart2, Trophy, Target, BookOpen, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { LayoutDashboard, ListChecks, BarChart2, Trophy, Target, BookOpen, Timer, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { useAuth } from "@/lib/auth"
 import { useQueryClient } from "@tanstack/react-query"
@@ -25,6 +25,7 @@ export function MobileHeader() {
   const isHabits = pathname === "/habits"
   const isGoals = pathname === "/goals"
   const isJournal = pathname === "/journal"
+  const isPomodoro = pathname === "/pomodoro"
   const isStats = pathname === "/statistics"
   const isAchievements = pathname === "/achievements"
   const isSettings = pathname === "/settings"
@@ -86,6 +87,13 @@ export function MobileHeader() {
               <BookOpen className="w-4 h-4" />
               Journal
               {isJournal && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={isPomodoro ? "font-semibold" : ""}>
+            <Link to="/pomodoro" className="flex items-center gap-2 w-full">
+              <Timer className="w-4 h-4" />
+              Pomodoro
+              {isPomodoro && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

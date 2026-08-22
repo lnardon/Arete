@@ -86,6 +86,35 @@ func journalLine(e models.JournalEntry) string {
 	return fmt.Sprintf("*%s* (mood %d/5)\n%s", e.EntryDate, e.Mood, e.Content)
 }
 
+// pomodoroEntryView augments a PomodoroEntry with a ready-made
+// WhatsApp-formatted display line, mirroring goalView/journalView.
+type pomodoroEntryView struct {
+	models.PomodoroEntry
+	Formatted string `json:"formatted"`
+}
+
+func formatPomodoroEntry(e models.PomodoroEntry) pomodoroEntryView {
+	return pomodoroEntryView{PomodoroEntry: e, Formatted: pomodoroEntryLine(e)}
+}
+
+func formatPomodoroEntries(entries []models.PomodoroEntry) []pomodoroEntryView {
+	views := make([]pomodoroEntryView, len(entries))
+	for i, e := range entries {
+		views[i] = formatPomodoroEntry(e)
+	}
+	return views
+}
+
+func pomodoroEntryLine(e models.PomodoroEntry) string {
+	start := e.StartedAt.Format("15:04")
+	if e.EndedAt == nil {
+		return fmt.Sprintf("*Timer running* — started %s, planned %d min", start, e.PlannedMinutes)
+	}
+	elapsed := int(e.EndedAt.Sub(e.StartedAt).Minutes())
+	end := e.EndedAt.Format("15:04")
+	return fmt.Sprintf("*%s* %s-%s (%d min, planned %d)", e.LocalDate, start, end, elapsed, e.PlannedMinutes)
+}
+
 func progressBar(current, target int) string {
 	filled := 0
 	if target > 0 {

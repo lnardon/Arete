@@ -16,6 +16,7 @@ import { Route as AppAchievementsRouteImport } from './routes/_app.achievements'
 import { Route as AppGoalsRouteImport } from './routes/_app.goals'
 import { Route as AppHabitsRouteImport } from './routes/_app.habits'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
+import { Route as AppPomodoroRouteImport } from './routes/_app.pomodoro'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppStatisticsRouteImport } from './routes/_app.statistics'
 import { Route as AuthLoginRouteImport } from './routes/_auth.login'
@@ -54,6 +55,11 @@ const AppJournalRoute = AppJournalRouteImport.update({
   path: '/journal',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPomodoroRoute = AppPomodoroRouteImport.update({
+  id: '/pomodoro',
+  path: '/pomodoro',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/goals': typeof AppGoalsRoute
   '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
+  '/pomodoro': typeof AppPomodoroRoute
   '/settings': typeof AppSettingsRoute
   '/statistics': typeof AppStatisticsRoute
   '/login': typeof AuthLoginRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/goals': typeof AppGoalsRoute
   '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
+  '/pomodoro': typeof AppPomodoroRoute
   '/settings': typeof AppSettingsRoute
   '/statistics': typeof AppStatisticsRoute
   '/login': typeof AuthLoginRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/_app/goals': typeof AppGoalsRoute
   '/_app/habits': typeof AppHabitsRoute
   '/_app/journal': typeof AppJournalRoute
+  '/_app/pomodoro': typeof AppPomodoroRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistics': typeof AppStatisticsRoute
   '/_auth/login': typeof AuthLoginRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/habits'
     | '/journal'
+    | '/pomodoro'
     | '/settings'
     | '/statistics'
     | '/login'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/habits'
     | '/journal'
+    | '/pomodoro'
     | '/settings'
     | '/statistics'
     | '/login'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/_app/goals'
     | '/_app/habits'
     | '/_app/journal'
+    | '/_app/pomodoro'
     | '/_app/settings'
     | '/_app/statistics'
     | '/_auth/login'
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJournalRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/pomodoro': {
+      id: '/_app/pomodoro'
+      path: '/pomodoro'
+      fullPath: '/pomodoro'
+      preLoaderRoute: typeof AppPomodoroRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -241,6 +260,7 @@ interface AppRouteChildren {
   AppGoalsRoute: typeof AppGoalsRoute
   AppHabitsRoute: typeof AppHabitsRoute
   AppJournalRoute: typeof AppJournalRoute
+  AppPomodoroRoute: typeof AppPomodoroRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatisticsRoute: typeof AppStatisticsRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -251,6 +271,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGoalsRoute: AppGoalsRoute,
   AppHabitsRoute: AppHabitsRoute,
   AppJournalRoute: AppJournalRoute,
+  AppPomodoroRoute: AppPomodoroRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatisticsRoute: AppStatisticsRoute,
   AppIndexRoute: AppIndexRoute,

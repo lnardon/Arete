@@ -102,6 +102,7 @@ func main() {
 	journalRepo := repository.NewJournalRepository(db)
 	whatsappRepo := repository.NewWhatsAppRepository(db)
 	conversationRepo := repository.NewConversationRepository(db)
+	pomodoroRepo := repository.NewPomodoroRepository(db)
 	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
 
 	loc, err := time.LoadLocation(cfg.App.Timezone)
@@ -110,7 +111,7 @@ func main() {
 	}
 
 	openaiClient := openai.NewClient(option.WithAPIKey(cfg.OpenAI.APIKey))
-	aiAgent := ai.NewAgent(&openaiClient, cfg.OpenAI.Model, cfg.OpenAI.TranscriptionModel, loc, habitRepo, goalRepo, journalRepo)
+	aiAgent := ai.NewAgent(&openaiClient, cfg.OpenAI.Model, cfg.OpenAI.TranscriptionModel, loc, habitRepo, goalRepo, journalRepo, pomodoroRepo)
 	evoClient := whatsapp.NewClient(cfg.Evolution)
 
 	habitHandler := handlers.NewHabitHandler(habitRepo)
@@ -118,6 +119,8 @@ func main() {
 	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
 	goalHandler := handlers.NewGoalHandler(goalRepo)
 	journalHandler := handlers.NewJournalHandler(journalRepo)
+	pomodoroProjectHandler := handlers.NewPomodoroProjectHandler(pomodoroRepo)
+	pomodoroTimerHandler := handlers.NewPomodoroTimerHandler(pomodoroRepo)
 
 	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
 	whatsappRateLimiter := middleware.NewRateLimiter(15, time.Minute)
@@ -131,16 +134,18 @@ func main() {
 	)
 
 	router := api.NewRouter(api.RouterConfig{
-		StaticDir:         staticDir,
-		HabitHandler:      habitHandler,
-		CompletionHandler: completionHandler,
-		AuthHandler:       authHandler,
-		GoalHandler:       goalHandler,
-		JournalHandler:    journalHandler,
-		WhatsAppHandler:   whatsappHandler,
-		AuthService:       authSvc,
-		AllowedOrigin:     cfg.App.AppDomain,
-		RateLimiter:       rateLimiter,
+		StaticDir:              staticDir,
+		HabitHandler:           habitHandler,
+		CompletionHandler:      completionHandler,
+		AuthHandler:            authHandler,
+		GoalHandler:            goalHandler,
+		JournalHandler:         journalHandler,
+		PomodoroProjectHandler: pomodoroProjectHandler,
+		PomodoroTimerHandler:   pomodoroTimerHandler,
+		WhatsAppHandler:        whatsappHandler,
+		AuthService:            authSvc,
+		AllowedOrigin:          cfg.App.AppDomain,
+		RateLimiter:            rateLimiter,
 	})
 
 	server := &http.Server{
