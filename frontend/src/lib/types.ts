@@ -80,3 +80,30 @@ export interface WhatsAppLinkCode {
   code: string
   expiresAt: string
 }
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  description: string | null
+  location: string | null
+  startAt: string // ISO 8601
+  endAt: string // ISO 8601
+  allDay: boolean
+  timezone: string
+  recurrenceRule: string | null
+  color: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CalendarEventInput {
+  title: string
+  description: string | null
+  location: string | null
+  startAt: string // ISO 8601
+  endAt: string // ISO 8601
+  allDay: boolean
+  timezone: string
+  recurrenceRule: string | null
+  color: string
+}

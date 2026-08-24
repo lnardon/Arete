@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, LayoutDashboard, ListChecks, Settings, Target, Timer, Trophy } from "lucide-react"
+import { BarChart3, BookOpen, Calendar, LayoutDashboard, ListChecks, Settings, Target, Timer, Trophy } from "lucide-react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 import { ThemeSwitcher } from "@/components/theme-switcher"
@@ -13,6 +13,7 @@ interface NavItem {
 const trunkItem: NavItem = { icon: LayoutDashboard, label: "Dashboard", href: "/" }
 
 const branchItems: NavItem[] = [
+  { icon: Calendar, label: "Calendar", href: "/calendar" },
   { icon: ListChecks, label: "Habits", href: "/habits" },
   { icon: Target, label: "Goals", href: "/goals" },
   { icon: BookOpen, label: "Journal", href: "/journal" },

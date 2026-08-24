@@ -1,4 +1,4 @@
-import type { ActiveTimer, Goal, GoalType, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
+import type { ActiveTimer, CalendarEvent, CalendarEventInput, Goal, GoalType, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -110,6 +110,18 @@ export const api = {
       delete: (id: string) =>
         request<void>(`/api/v1/pomodoro/entries/${id}`, { method: 'DELETE' }),
     },
+  },
+  calendarEvents: {
+    list: (start: string, end: string) =>
+      request<CalendarEvent[]>(`/api/v1/calendar/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
+    get: (id: string) =>
+      request<CalendarEvent>(`/api/v1/calendar/events/${id}`),
+    create: (event: CalendarEventInput) =>
+      request<CalendarEvent>('/api/v1/calendar/events', { method: 'POST', body: JSON.stringify(event) }),
+    update: (id: string, event: CalendarEventInput) =>
+      request<CalendarEvent>(`/api/v1/calendar/events/${id}`, { method: 'PUT', body: JSON.stringify(event) }),
+    delete: (id: string) =>
+      request<void>(`/api/v1/calendar/events/${id}`, { method: 'DELETE' }),
   },
   whatsapp: {
     status: () => request<WhatsAppStatus>('/api/v1/whatsapp/status'),

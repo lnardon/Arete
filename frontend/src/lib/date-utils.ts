@@ -63,6 +63,42 @@ export function navigatePeriodKey(type: 'month' | 'quarter' | 'semester' | 'year
   return `${parseInt(key) + delta}`
 }
 
+export function addDays(date: Date, amount: number): Date {
+  const d = new Date(date)
+  d.setDate(d.getDate() + amount)
+  return d
+}
+
+// Monday-start week, to match the ISO week convention used elsewhere in the app.
+export function getStartOfWeek(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay() // 0 = Sunday
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+export function getStartOfDay(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+export function formatHourLabel(hour: number): string {
+  if (hour === 0) return '12 AM'
+  if (hour === 12) return '12 PM'
+  return hour < 12 ? `${hour} AM` : `${hour - 12} PM`
+}
+
+export function formatWeekdayLabel(date: Date): string {
+  return date.toLocaleDateString('en-US', { weekday: 'short' })
+}
+
+export function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
 export function formatPeriodLabel(type: 'month' | 'quarter' | 'semester' | 'year', key: string): string {
   if (type === 'month') {
     const [y, m] = key.split('-')

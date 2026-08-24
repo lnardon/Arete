@@ -20,6 +20,7 @@ type RouterConfig struct {
 	JournalHandler         *handlers.JournalHandler
 	PomodoroProjectHandler *handlers.PomodoroProjectHandler
 	PomodoroTimerHandler   *handlers.PomodoroTimerHandler
+	CalendarEventHandler   *handlers.CalendarEventHandler
 	WhatsAppHandler        *handlers.WhatsAppHandler
 	AuthService            *auth.Service
 	AllowedOrigin          string
@@ -107,6 +108,11 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/pomodoro/stop", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.Stop))).Methods("POST")
 	protected.Handle("/pomodoro/entries", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.ListEntries))).Methods("GET")
 	protected.Handle("/pomodoro/entries/{id}", jwtMiddleware(http.HandlerFunc(config.PomodoroTimerHandler.DeleteEntry))).Methods("DELETE")
+	protected.Handle("/calendar/events", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.ListEvents))).Methods("GET")
+	protected.Handle("/calendar/events", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.CreateEvent))).Methods("POST")
+	protected.Handle("/calendar/events/{id}", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.GetEvent))).Methods("GET")
+	protected.Handle("/calendar/events/{id}", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.UpdateEvent))).Methods("PUT")
+	protected.Handle("/calendar/events/{id}", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.DeleteEvent))).Methods("DELETE")
 	protected.Handle("/whatsapp/link/code", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.CreateLinkCode))).Methods("POST")
 	protected.Handle("/whatsapp/status", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Status))).Methods("GET")
 	protected.Handle("/whatsapp/link", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Unlink))).Methods("DELETE")

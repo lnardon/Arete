@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAchievementsRouteImport } from './routes/_app.achievements'
+import { Route as AppCalendarRouteImport } from './routes/_app.calendar'
 import { Route as AppGoalsRouteImport } from './routes/_app.goals'
 import { Route as AppHabitsRouteImport } from './routes/_app.habits'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
@@ -38,6 +39,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAchievementsRoute = AppAchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCalendarRoute = AppCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AppRoute,
 } as any)
 const AppGoalsRoute = AppGoalsRouteImport.update({
@@ -84,6 +90,7 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/achievements': typeof AppAchievementsRoute
+  '/calendar': typeof AppCalendarRoute
   '/goals': typeof AppGoalsRoute
   '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/achievements': typeof AppAchievementsRoute
+  '/calendar': typeof AppCalendarRoute
   '/goals': typeof AppGoalsRoute
   '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_app/achievements': typeof AppAchievementsRoute
+  '/_app/calendar': typeof AppCalendarRoute
   '/_app/goals': typeof AppGoalsRoute
   '/_app/habits': typeof AppHabitsRoute
   '/_app/journal': typeof AppJournalRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/achievements'
+    | '/calendar'
     | '/goals'
     | '/habits'
     | '/journal'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/achievements'
+    | '/calendar'
     | '/goals'
     | '/habits'
     | '/journal'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_auth'
     | '/_app/achievements'
+    | '/_app/calendar'
     | '/_app/goals'
     | '/_app/habits'
     | '/_app/journal'
@@ -194,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/achievements'
       fullPath: '/achievements'
       preLoaderRoute: typeof AppAchievementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/calendar': {
+      id: '/_app/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AppCalendarRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/goals': {
@@ -257,6 +276,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAchievementsRoute: typeof AppAchievementsRoute
+  AppCalendarRoute: typeof AppCalendarRoute
   AppGoalsRoute: typeof AppGoalsRoute
   AppHabitsRoute: typeof AppHabitsRoute
   AppJournalRoute: typeof AppJournalRoute
@@ -268,6 +288,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAchievementsRoute: AppAchievementsRoute,
+  AppCalendarRoute: AppCalendarRoute,
   AppGoalsRoute: AppGoalsRoute,
   AppHabitsRoute: AppHabitsRoute,
   AppJournalRoute: AppJournalRoute,

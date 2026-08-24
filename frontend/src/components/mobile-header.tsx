@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
-import { LayoutDashboard, ListChecks, BarChart2, Trophy, Target, BookOpen, Timer, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { LayoutDashboard, ListChecks, BarChart2, Trophy, Target, BookOpen, Timer, Calendar, Settings, Menu, Moon, Sun, LogOut } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { useAuth } from "@/lib/auth"
 import { useQueryClient } from "@tanstack/react-query"
@@ -22,6 +22,7 @@ export function MobileHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   const isDashboard = pathname === "/"
+  const isCalendar = pathname === "/calendar"
   const isHabits = pathname === "/habits"
   const isGoals = pathname === "/goals"
   const isJournal = pathname === "/journal"
@@ -66,6 +67,13 @@ export function MobileHeader() {
               <LayoutDashboard className="w-4 h-4" />
               Dashboard
               {isDashboard && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={isCalendar ? "font-semibold" : ""}>
+            <Link to="/calendar" className="flex items-center gap-2 w-full">
+              <Calendar className="w-4 h-4" />
+              Calendar
+              {isCalendar && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className={isHabits ? "font-semibold" : ""}>

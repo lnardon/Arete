@@ -30,4 +30,8 @@ export const queryKeys = {
     all: ['whatsapp'] as const,
     status: () => [...queryKeys.whatsapp.all, 'status'] as const,
   },
+  calendarEvents: {
+    all: ['calendarEvents'] as const,
+    list: (start: string, end: string) => [...queryKeys.calendarEvents.all, start, end] as const,
+  },
 }

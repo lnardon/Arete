@@ -103,6 +103,7 @@ func main() {
 	whatsappRepo := repository.NewWhatsAppRepository(db)
 	conversationRepo := repository.NewConversationRepository(db)
 	pomodoroRepo := repository.NewPomodoroRepository(db)
+	calendarEventRepo := repository.NewCalendarEventRepository(db)
 	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
 
 	loc, err := time.LoadLocation(cfg.App.Timezone)
@@ -121,6 +122,7 @@ func main() {
 	journalHandler := handlers.NewJournalHandler(journalRepo)
 	pomodoroProjectHandler := handlers.NewPomodoroProjectHandler(pomodoroRepo)
 	pomodoroTimerHandler := handlers.NewPomodoroTimerHandler(pomodoroRepo)
+	calendarEventHandler := handlers.NewCalendarEventHandler(calendarEventRepo)
 
 	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
 	whatsappRateLimiter := middleware.NewRateLimiter(15, time.Minute)
@@ -142,6 +144,7 @@ func main() {
 		JournalHandler:         journalHandler,
 		PomodoroProjectHandler: pomodoroProjectHandler,
 		PomodoroTimerHandler:   pomodoroTimerHandler,
+		CalendarEventHandler:   calendarEventHandler,
 		WhatsAppHandler:        whatsappHandler,
 		AuthService:            authSvc,
 		AllowedOrigin:          cfg.App.AppDomain,
