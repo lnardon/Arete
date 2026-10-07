@@ -19,7 +19,9 @@ import (
 	"github.com/lnardon/arete/internal/auth"
 	"github.com/lnardon/arete/internal/config"
 	"github.com/lnardon/arete/internal/database"
+	"github.com/lnardon/arete/internal/google"
 	"github.com/lnardon/arete/internal/repository"
+	"github.com/lnardon/arete/internal/tokencrypt"
 	"github.com/lnardon/arete/internal/whatsapp"
 	openai "github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -106,6 +108,12 @@ func main() {
 	calendarEventRepo := repository.NewCalendarEventRepository(db)
 	authSvc := auth.NewService(cfg.JWT, cfg.App.CookieSecure)
 
+	tokenCipher, err := tokencrypt.New(cfg.Google.TokenEncryptionKey)
+	if err != nil {
+		log.Fatal("Failed to build token cipher:", err)
+	}
+	googleAccountRepo := repository.NewGoogleAccountRepository(db, tokenCipher)
+
 	loc, err := time.LoadLocation(cfg.App.Timezone)
 	if err != nil {
 		log.Fatal("Invalid APP_TIMEZONE:", err)
@@ -115,6 +123,11 @@ func main() {
 	aiAgent := ai.NewAgent(&openaiClient, cfg.OpenAI.Model, cfg.OpenAI.TranscriptionModel, loc, habitRepo, goalRepo, journalRepo, pomodoroRepo)
 	evoClient := whatsapp.NewClient(cfg.Evolution)
 
+	googleOAuth := google.NewOAuthService(cfg.Google)
+	googleCalendar := google.NewCalendarClient()
+	googleSync := google.NewSyncEngine(googleAccountRepo, calendarEventRepo, googleOAuth, googleCalendar, time.Duration(cfg.Google.SyncIntervalMinutes)*time.Minute, loc)
+	googleSync.Start()
+
 	habitHandler := handlers.NewHabitHandler(habitRepo)
 	completionHandler := handlers.NewCompletionHandler(habitRepo)
 	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
@@ -122,7 +135,8 @@ func main() {
 	journalHandler := handlers.NewJournalHandler(journalRepo)
 	pomodoroProjectHandler := handlers.NewPomodoroProjectHandler(pomodoroRepo)
 	pomodoroTimerHandler := handlers.NewPomodoroTimerHandler(pomodoroRepo)
-	calendarEventHandler := handlers.NewCalendarEventHandler(calendarEventRepo)
+	calendarEventHandler := handlers.NewCalendarEventHandler(calendarEventRepo, googleSync)
+	googleHandler := handlers.NewGoogleHandler(googleAccountRepo, googleOAuth, googleSync, authSvc, cfg.App.AppDomain)
 
 	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
 	whatsappRateLimiter := middleware.NewRateLimiter(15, time.Minute)
@@ -145,6 +159,7 @@ func main() {
 		PomodoroProjectHandler: pomodoroProjectHandler,
 		PomodoroTimerHandler:   pomodoroTimerHandler,
 		CalendarEventHandler:   calendarEventHandler,
+		GoogleHandler:          googleHandler,
 		WhatsAppHandler:        whatsappHandler,
 		AuthService:            authSvc,
 		AllowedOrigin:          cfg.App.AppDomain,

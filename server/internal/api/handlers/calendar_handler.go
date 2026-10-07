@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -11,12 +13,21 @@ import (
 	"github.com/lnardon/arete/internal/repository"
 )
 
-type CalendarEventHandler struct {
-	repo *repository.CalendarEventRepository
+// googleDeleter deletes a single event on Google's side, satisfied by
+// *google.SyncEngine. Declared here (rather than importing internal/google
+// directly) so this package doesn't need to depend on the Google integration
+// to handle plain, unsynced events.
+type googleDeleter interface {
+	DeleteRemoteEvent(ctx context.Context, userID, googleEventID string) error
 }
 
-func NewCalendarEventHandler(repo *repository.CalendarEventRepository) *CalendarEventHandler {
-	return &CalendarEventHandler{repo: repo}
+type CalendarEventHandler struct {
+	repo         *repository.CalendarEventRepository
+	googleDelete googleDeleter
+}
+
+func NewCalendarEventHandler(repo *repository.CalendarEventRepository, googleDelete googleDeleter) *CalendarEventHandler {
+	return &CalendarEventHandler{repo: repo, googleDelete: googleDelete}
 }
 
 type calendarEventBody struct {
@@ -130,6 +141,16 @@ func (h *CalendarEventHandler) DeleteEvent(w http.ResponseWriter, r *http.Reques
 	}
 
 	id := mux.Vars(r)["id"]
+
+	// A Google-linked event must be deleted on Google's side synchronously,
+	// not on the next sync tick — otherwise the next pull would upsert it
+	// straight back into existence locally, since Google would still have it.
+	if event, err := h.repo.GetEvent(r.Context(), authUser.ID, id); err == nil && event.GoogleEventID != nil {
+		if err := h.googleDelete.DeleteRemoteEvent(r.Context(), authUser.ID, *event.GoogleEventID); err != nil {
+			slog.Error("calendar: remote google delete failed, deleting local copy anyway", "eventId", id, "error", err)
+		}
+	}
+
 	if err := h.repo.DeleteEvent(r.Context(), authUser.ID, id); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			http.Error(w, "event not found", http.StatusNotFound)

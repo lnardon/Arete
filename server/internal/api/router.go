@@ -21,6 +21,7 @@ type RouterConfig struct {
 	PomodoroProjectHandler *handlers.PomodoroProjectHandler
 	PomodoroTimerHandler   *handlers.PomodoroTimerHandler
 	CalendarEventHandler   *handlers.CalendarEventHandler
+	GoogleHandler          *handlers.GoogleHandler
 	WhatsAppHandler        *handlers.WhatsAppHandler
 	AuthService            *auth.Service
 	AllowedOrigin          string
@@ -78,6 +79,10 @@ func NewRouter(config RouterConfig) http.Handler {
 	// shared-secret query param and, in production, by living on a private
 	// network rather than being publicly routable.
 	public.HandleFunc("/webhooks/whatsapp", config.WhatsAppHandler.Webhook).Methods("POST")
+	// Google's OAuth redirect back here is a cross-site top-level navigation,
+	// so our SameSite=Strict session cookie isn't attached — see
+	// GoogleHandler.Callback, which authenticates via a signed state param.
+	public.HandleFunc("/google/callback", config.GoogleHandler.Callback).Methods("GET")
 
 	// Protected routes
 	protected := r.PathPrefix("/api/v1").Subrouter()
@@ -113,6 +118,10 @@ func NewRouter(config RouterConfig) http.Handler {
 	protected.Handle("/calendar/events/{id}", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.GetEvent))).Methods("GET")
 	protected.Handle("/calendar/events/{id}", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.UpdateEvent))).Methods("PUT")
 	protected.Handle("/calendar/events/{id}", jwtMiddleware(http.HandlerFunc(config.CalendarEventHandler.DeleteEvent))).Methods("DELETE")
+	protected.Handle("/google/auth-url", jwtMiddleware(http.HandlerFunc(config.GoogleHandler.AuthURL))).Methods("GET")
+	protected.Handle("/google/status", jwtMiddleware(http.HandlerFunc(config.GoogleHandler.Status))).Methods("GET")
+	protected.Handle("/google/disconnect", jwtMiddleware(http.HandlerFunc(config.GoogleHandler.Disconnect))).Methods("DELETE")
+	protected.Handle("/google/sync", jwtMiddleware(http.HandlerFunc(config.GoogleHandler.Sync))).Methods("POST")
 	protected.Handle("/whatsapp/link/code", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.CreateLinkCode))).Methods("POST")
 	protected.Handle("/whatsapp/status", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Status))).Methods("GET")
 	protected.Handle("/whatsapp/link", jwtMiddleware(http.HandlerFunc(config.WhatsAppHandler.Unlink))).Methods("DELETE")

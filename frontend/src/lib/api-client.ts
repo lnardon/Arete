@@ -1,4 +1,4 @@
-import type { ActiveTimer, CalendarEvent, CalendarEventInput, Goal, GoalType, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
+import type { ActiveTimer, CalendarEvent, CalendarEventInput, Goal, GoalType, GoogleCalendarStatus, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -122,6 +122,12 @@ export const api = {
       request<CalendarEvent>(`/api/v1/calendar/events/${id}`, { method: 'PUT', body: JSON.stringify(event) }),
     delete: (id: string) =>
       request<void>(`/api/v1/calendar/events/${id}`, { method: 'DELETE' }),
+  },
+  google: {
+    authUrl: () => request<{ authUrl: string }>('/api/v1/google/auth-url'),
+    status: () => request<GoogleCalendarStatus>('/api/v1/google/status'),
+    disconnect: () => request<void>('/api/v1/google/disconnect', { method: 'DELETE' }),
+    sync: () => request<GoogleCalendarStatus>('/api/v1/google/sync', { method: 'POST' }),
   },
   whatsapp: {
     status: () => request<WhatsAppStatus>('/api/v1/whatsapp/status'),

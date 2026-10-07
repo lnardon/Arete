@@ -34,4 +34,8 @@ export const queryKeys = {
     all: ['calendarEvents'] as const,
     list: (start: string, end: string) => [...queryKeys.calendarEvents.all, start, end] as const,
   },
+  googleCalendar: {
+    all: ['googleCalendar'] as const,
+    status: () => [...queryKeys.googleCalendar.all, 'status'] as const,
+  },
 }

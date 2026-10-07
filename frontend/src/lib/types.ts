@@ -107,3 +107,7 @@ export interface CalendarEventInput {
   recurrenceRule: string | null
   color: string
 }
+
+export type GoogleCalendarStatus =
+  | { connected: false }
+  | { connected: true; email: string | null; lastSyncedAt: string | null }

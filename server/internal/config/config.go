@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strconv"
@@ -16,6 +17,7 @@ type Config struct {
 	App       AppConfig
 	Evolution EvolutionConfig
 	OpenAI    OpenAIConfig
+	Google    GoogleConfig
 }
 
 type ServerConfig struct {
@@ -68,6 +70,14 @@ type OpenAIConfig struct {
 	TranscriptionModel string
 }
 
+type GoogleConfig struct {
+	ClientID            string
+	ClientSecret        string
+	RedirectURL         string // must exactly match the URI registered in Google Cloud Console
+	TokenEncryptionKey  string // 32 raw bytes, base64-encoded; encrypts stored OAuth tokens at rest
+	SyncIntervalMinutes int
+}
+
 func Load() (*Config, error) {
 	// prod
 	_ = godotenv.Load()
@@ -113,10 +123,21 @@ func Load() (*Config, error) {
 			Model:              getEnv("OPENAI_MODEL", "gpt-5.6-luna"),
 			TranscriptionModel: getEnv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe"),
 		},
+		Google: GoogleConfig{
+			ClientID:            getEnv("GOOGLE_CLIENT_ID", ""),
+			ClientSecret:        getEnv("GOOGLE_CLIENT_SECRET", ""),
+			RedirectURL:         getEnv("GOOGLE_REDIRECT_URL", ""),
+			TokenEncryptionKey:  getEnv("GOOGLE_TOKEN_ENCRYPTION_KEY", ""),
+			SyncIntervalMinutes: getEnvAsInt("GOOGLE_SYNC_INTERVAL_MINUTES", 5),
+		},
 	}
 
 	if len(config.JWT.SecretKey) < 32 {
 		return nil, fmt.Errorf("JWT_SECRET must be at least 32 characters (got %d)", len(config.JWT.SecretKey))
+	}
+
+	if key, err := base64.StdEncoding.DecodeString(config.Google.TokenEncryptionKey); config.Google.TokenEncryptionKey != "" && (err != nil || len(key) != 32) {
+		return nil, fmt.Errorf("GOOGLE_TOKEN_ENCRYPTION_KEY must be 32 bytes, base64-encoded (generate with: openssl rand -base64 32)")
 	}
 
 	return config, nil

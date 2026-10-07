@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
-import { createFileRoute } from '@tanstack/react-router'
-import { MessageCircle } from "lucide-react"
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { MessageCircle, Calendar as CalendarIcon, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { MobileHeader } from "@/components/mobile-header"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -14,6 +15,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { useWhatsAppStatus, useGenerateLinkCode, useUnlinkWhatsApp } from "@/hooks/use-whatsapp"
+import { useGoogleCalendarStatus, useDisconnectGoogleCalendar, useTriggerGoogleSync } from "@/hooks/use-google-calendar"
+import { api } from "@/lib/api-client"
 import type { WhatsAppLinkCode } from "@/lib/types"
 
 export const Route = createFileRoute('/_app/settings')({
@@ -26,6 +29,8 @@ export default function SettingsPage() {
   const [pendingCode, setPendingCode] = useState<WhatsAppLinkCode | null>(null)
   const [unlinkOpen, setUnlinkOpen] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(0)
+  const [googleDisconnectOpen, setGoogleDisconnectOpen] = useState(false)
+  const [connectingGoogle, setConnectingGoogle] = useState(false)
 
   const { data: status, isLoading } = useWhatsAppStatus({
     // Stop polling once the pending code either links the account or expires
@@ -35,6 +40,11 @@ export default function SettingsPage() {
   })
   const generateCode = useGenerateLinkCode()
   const unlink = useUnlinkWhatsApp()
+
+  const navigate = useNavigate()
+  const { data: googleStatus, isLoading: googleLoading } = useGoogleCalendarStatus()
+  const disconnectGoogle = useDisconnectGoogleCalendar()
+  const triggerGoogleSync = useTriggerGoogleSync()
 
   useEffect(() => {
     if (!pendingCode) return
@@ -51,10 +61,37 @@ export default function SettingsPage() {
     return () => clearInterval(interval)
   }, [pendingCode])
 
+  // The OAuth callback redirects back here with a result flag, since the
+  // Google consent screen is a full-page navigation (not a fetch) — there's
+  // no other way for it to hand results back to this page.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const result = params.get("google")
+    if (!result) return
+
+    if (result === "connected") {
+      toast.success("Google Calendar connected")
+    } else if (result === "error") {
+      toast.error("Failed to connect Google Calendar")
+    }
+    navigate({ to: "/settings", replace: true })
+  }, [navigate])
+
   function handleConnect() {
     generateCode.mutate(undefined, {
       onSuccess: (data) => setPendingCode(data),
     })
+  }
+
+  async function handleConnectGoogle() {
+    setConnectingGoogle(true)
+    try {
+      const { authUrl } = await api.google.authUrl()
+      window.location.href = authUrl
+    } catch {
+      toast.error("Failed to start Google connection")
+      setConnectingGoogle(false)
+    }
   }
 
   return (
@@ -141,9 +178,88 @@ export default function SettingsPage() {
                 )}
               </CardContent>
             </Card>
+
+            <Card className="max-w-xl mt-6">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                    <CalendarIcon className="w-5 h-5" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <CardTitle>Google Calendar</CardTitle>
+                    <CardDescription>
+                      Two-way sync between your Arete calendar and Google Calendar
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {googleLoading ? (
+                  <div className="h-14 rounded-lg bg-muted animate-pulse" />
+                ) : googleStatus?.connected ? (
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {googleStatus.email ?? "Connected"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {googleStatus.lastSyncedAt
+                          ? `Last synced ${new Date(googleStatus.lastSyncedAt).toLocaleString()}`
+                          : "Not synced yet"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => triggerGoogleSync.mutate()}
+                        disabled={triggerGoogleSync.isPending}
+                      >
+                        <RefreshCw className={`w-4 h-4 ${triggerGoogleSync.isPending ? "animate-spin" : ""}`} />
+                        Sync now
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => setGoogleDisconnectOpen(true)}>
+                        Disconnect
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button onClick={handleConnectGoogle} disabled={connectingGoogle}>
+                    Connect Google Calendar
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
+
+      <Dialog open={googleDisconnectOpen} onOpenChange={setGoogleDisconnectOpen}>
+        <DialogContent className="sm:max-w-md border-foreground/20">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-semibold tracking-tight">
+              Disconnect Google Calendar
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-2">
+              Events will stop syncing between Arete and Google Calendar. Events already synced won't be deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setGoogleDisconnectOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                disconnectGoogle.mutate()
+                setGoogleDisconnectOpen(false)
+              }}
+            >
+              Disconnect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={unlinkOpen} onOpenChange={setUnlinkOpen}>
         <DialogContent className="sm:max-w-md border-foreground/20">
