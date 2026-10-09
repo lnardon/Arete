@@ -6,6 +6,7 @@ import { CalendarDayView } from "@/components/calendar-day-view"
 import { CalendarWeekView } from "@/components/calendar-week-view"
 import { CalendarEventDialog } from "@/components/calendar-event-dialog"
 import { CalendarEventDeleteDialog } from "@/components/calendar-event-delete-dialog"
+import { RecurrenceScopeDialog } from "@/components/recurrence-scope-dialog"
 import {
   useCalendarEvents,
   useCreateCalendarEvent,
@@ -13,7 +14,17 @@ import {
   useDeleteCalendarEvent,
 } from "@/hooks/use-calendar-events"
 import { addDays, getStartOfDay, getStartOfWeek } from "@/lib/date-utils"
-import type { CalendarEvent, CalendarEventInput } from "@/lib/types"
+import type { CalendarEvent, CalendarEventInput, RecurrenceScope } from "@/lib/types"
+
+// A pending save or delete of an occurrence of a recurring event, waiting for
+// the user to pick which occurrences it applies to.
+type ScopePrompt =
+  | { mode: "save"; event: CalendarEvent; input: CalendarEventInput; allowThis: boolean }
+  | { mode: "delete"; event: CalendarEvent }
+
+function sameLines(a: string[] | null, b: string[] | null): boolean {
+  return (a ?? []).join("\n") === (b ?? []).join("\n")
+}
 
 export function CalendarView() {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -23,6 +34,7 @@ export function CalendarView() {
   const [defaultStart, setDefaultStart] = useState<Date | undefined>(undefined)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null)
+  const [scopePrompt, setScopePrompt] = useState<ScopePrompt | null>(null)
 
   const rangeStart = viewMode === "day" ? getStartOfDay(selectedDate) : getStartOfWeek(selectedDate)
   const rangeEnd = viewMode === "day" ? addDays(rangeStart, 1) : addDays(rangeStart, 7)
@@ -62,22 +74,44 @@ export function CalendarView() {
   }
 
   function handleSave(input: CalendarEventInput) {
-    if (editingEvent) {
-      updateEvent.mutate({ id: editingEvent.id, event: input })
-    } else {
+    if (!editingEvent) {
       createEvent.mutate(input)
+    } else if (editingEvent.recurringEventId) {
+      setScopePrompt({
+        mode: "save",
+        event: editingEvent,
+        input,
+        allowThis: sameLines(input.recurrence, editingEvent.recurrence),
+      })
+    } else {
+      updateEvent.mutate({ id: editingEvent.id, event: input })
     }
   }
 
   function handleRequestDelete() {
+    if (editingEvent?.recurringEventId) {
+      setScopePrompt({ mode: "delete", event: editingEvent })
+      return
+    }
     setDeletingEvent(editingEvent)
     setDeleteDialogOpen(true)
   }
 
   function handleConfirmDelete() {
     if (deletingEvent) {
-      deleteEvent.mutate(deletingEvent.id)
+      deleteEvent.mutate({ id: deletingEvent.id })
     }
+  }
+
+  function handleConfirmScope(scope: RecurrenceScope) {
+    if (!scopePrompt) return
+    if (scopePrompt.mode === "delete") {
+      deleteEvent.mutate({ id: scopePrompt.event.id, scope })
+      return
+    }
+    // A single occurrence can't carry its own rule.
+    const event = scope === "this" ? { ...scopePrompt.input, recurrence: null } : scopePrompt.input
+    updateEvent.mutate({ id: scopePrompt.event.id, event, scope })
   }
 
   return (
@@ -133,6 +167,15 @@ export function CalendarView() {
           onOpenChange={setDeleteDialogOpen}
           event={deletingEvent}
           onConfirm={handleConfirmDelete}
+        />
+
+        <RecurrenceScopeDialog
+          open={scopePrompt !== null}
+          onOpenChange={(open) => !open && setScopePrompt(null)}
+          mode={scopePrompt?.mode ?? "save"}
+          eventTitle={scopePrompt?.event.title ?? ""}
+          allowThis={scopePrompt?.mode === "save" ? scopePrompt.allowThis : true}
+          onConfirm={handleConfirmScope}
         />
       </div>
     </main>

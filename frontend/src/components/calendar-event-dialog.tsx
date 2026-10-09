@@ -15,14 +15,24 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
+import { RecurrencePicker } from "@/components/recurrence-picker"
 import type { CalendarEvent, CalendarEventInput } from "@/lib/types"
 import { addDays, formatLocalDate } from "@/lib/date-utils"
+import { buildRecurrence, parseRepeat, summarizeRecurrence, type RepeatValue } from "@/lib/recurrence"
 
 const COLOR_SWATCHES = ["#6366f1", "#ec4899", "#22c55e", "#f97316", "#0ea5e9", "#a855f7", "#eab308", "#ef4444"]
 
 function toDatetimeLocalValue(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0")
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+// Parses the Starts field the way handleSubmit does: all-day values are a
+// local date, timed ones a local date-time.
+function parseStartValue(value: string, allDay: boolean): Date | null {
+  if (!value) return null
+  const date = new Date(allDay ? `${value}T00:00:00` : value)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 interface CalendarEventDialogProps {
@@ -49,6 +59,7 @@ export function CalendarEventDialog({
   const [startValue, setStartValue] = useState("")
   const [endValue, setEndValue] = useState("")
   const [color, setColor] = useState(COLOR_SWATCHES[0])
+  const [repeat, setRepeat] = useState<RepeatValue>({ kind: "none" })
 
   useEffect(() => {
     if (!open) return
@@ -70,6 +81,7 @@ export function CalendarEventDialog({
         setEndValue(toDatetimeLocalValue(end))
       }
       setColor(event.color)
+      setRepeat(parseRepeat(event.recurrence, start))
     } else {
       const start = defaultStart ?? new Date()
       const end = new Date(start.getTime() + 60 * 60 * 1000)
@@ -80,8 +92,11 @@ export function CalendarEventDialog({
       setStartValue(toDatetimeLocalValue(start))
       setEndValue(toDatetimeLocalValue(end))
       setColor(COLOR_SWATCHES[0])
+      setRepeat({ kind: "none" })
     }
   }, [open, event, defaultStart])
+
+  const repeatStart = parseStartValue(startValue, allDay) ?? new Date()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -107,7 +122,7 @@ export function CalendarEventDialog({
       endAt: endAt.toISOString(),
       allDay,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      recurrenceRule: null,
+      recurrence: buildRecurrence(repeat, startAt, allDay, event?.recurrence ?? null),
       color,
     })
     onOpenChange(false)
@@ -115,7 +130,7 @@ export function CalendarEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-foreground/20">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto border-foreground/20">
         <DialogHeader>
           <DialogTitle className="font-display text-xl font-semibold tracking-tight">
             {event ? "Edit Event" : "New Event"}
@@ -172,6 +187,13 @@ export function CalendarEventDialog({
                 />
               </div>
             </div>
+
+            <RecurrencePicker
+              value={repeat}
+              onChange={setRepeat}
+              start={repeatStart}
+              keepLabel={summarizeRecurrence(event?.recurrence ?? null)}
+            />
 
             <div className="flex flex-col gap-1.5">
               <Label className="text-muted-foreground">Color</Label>

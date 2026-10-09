@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -134,6 +135,13 @@ func Load() (*Config, error) {
 
 	if len(config.JWT.SecretKey) < 32 {
 		return nil, fmt.Errorf("JWT_SECRET must be at least 32 characters (got %d)", len(config.JWT.SecretKey))
+	}
+
+	// Every Google OAuth client ID ends in this suffix. Catching a placeholder,
+	// a pasted client secret or a truncated copy here beats Google's opaque
+	// "Error 401: invalid_client" on the consent screen.
+	if id := config.Google.ClientID; id != "" && !strings.HasSuffix(id, ".apps.googleusercontent.com") {
+		return nil, fmt.Errorf("GOOGLE_CLIENT_ID must be the OAuth client ID from Google Cloud Console, ending in .apps.googleusercontent.com")
 	}
 
 	if key, err := base64.StdEncoding.DecodeString(config.Google.TokenEncryptionKey); config.Google.TokenEncryptionKey != "" && (err != nil || len(key) != 32) {

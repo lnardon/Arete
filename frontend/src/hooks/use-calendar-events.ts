@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
-import type { CalendarEventInput } from '@/lib/types'
+import type { CalendarEventInput, RecurrenceScope } from '@/lib/types'
 
 export function useCalendarEvents(start: string, end: string) {
   return useQuery({
@@ -25,8 +25,8 @@ export function useCreateCalendarEvent() {
 export function useUpdateCalendarEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, event }: { id: string; event: CalendarEventInput }) =>
-      api.calendarEvents.update(id, event),
+    mutationFn: ({ id, event, scope }: { id: string; event: CalendarEventInput; scope?: RecurrenceScope }) =>
+      api.calendarEvents.update(id, event, scope),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.calendarEvents.all })
       toast.success('Event updated')
@@ -37,7 +37,7 @@ export function useUpdateCalendarEvent() {
 export function useDeleteCalendarEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.calendarEvents.delete(id),
+    mutationFn: ({ id, scope }: { id: string; scope?: RecurrenceScope }) => api.calendarEvents.delete(id, scope),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.calendarEvents.all })
       toast.success('Event deleted')

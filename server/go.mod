@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.11.2
 	github.com/openai/openai-go/v3 v3.51.0
+	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/crypto v0.54.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.293.0

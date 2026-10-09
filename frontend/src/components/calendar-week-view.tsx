@@ -5,6 +5,7 @@ import type { CalendarEvent } from "@/lib/types"
 import { HOUR_HEIGHT, DAY_HEIGHT, layoutEventForDay } from "@/lib/calendar-layout"
 import { formatHourLabel, formatWeekdayLabel, addDays, getStartOfDay, isSameDay } from "@/lib/date-utils"
 import { CalendarEventItem } from "@/components/calendar-event-item"
+import { Repeat } from "lucide-react"
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
@@ -46,10 +47,11 @@ export function CalendarWeekView({ weekStart, events, onSlotClick, onEventClick 
                     key={event.id}
                     type="button"
                     onClick={() => onEventClick(event)}
-                    className="rounded-md px-1.5 py-0.5 text-left text-[11px] text-white truncate"
+                    className="rounded-md px-1.5 py-0.5 text-left text-[11px] text-white flex items-center gap-1 min-w-0"
                     style={{ backgroundColor: event.color }}
                   >
-                    {event.title}
+                    {event.recurringEventId && <Repeat className="size-3 shrink-0" aria-label="Repeats" />}
+                    <span className="truncate">{event.title}</span>
                   </button>
                 ))}
             </div>

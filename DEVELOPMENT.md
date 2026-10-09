@@ -19,6 +19,22 @@ npm run dev
 
 The frontend dev server runs on `http://localhost:5173` and proxies `/api` requests to the Go server on port 8080.
 
+### Tests
+
+```bash
+cd server
+go test ./...   # unit tests; database tests are skipped
+```
+
+The calendar handler tests in `internal/api/handlers` run against a real Postgres and run every migration on it, so point them at a throwaway database:
+
+```bash
+docker run -d --rm --name arete-test-db -p 127.0.0.1:55499:5432 \
+  -e POSTGRES_USER=arete -e POSTGRES_PASSWORD=arete -e POSTGRES_DB=arete_test postgres:17
+TEST_DB_PORT=55499 TEST_DB_NAME=arete_test go test ./internal/api/handlers/
+docker stop arete-test-db
+```
+
 ## AI Model (OpenAI)
 
 The WhatsApp assistant's tool-calling loop (`internal/ai`) runs against the OpenAI API. You need an `OPENAI_API_KEY` — no other setup.

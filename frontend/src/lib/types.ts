@@ -81,6 +81,9 @@ export interface WhatsAppLinkCode {
   expiresAt: string
 }
 
+// One entry of the calendar: a single event, or one occurrence of a
+// recurring series. An occurrence's id is an instance ID
+// (`<seriesId>_<stamp>`), stable even after the occurrence is edited.
 export interface CalendarEvent {
   id: string
   title: string
@@ -90,7 +93,11 @@ export interface CalendarEvent {
   endAt: string // ISO 8601
   allDay: boolean
   timezone: string
-  recurrenceRule: string | null
+  // RFC 5545 lines of the series, as Google stores them, e.g.
+  // ["RRULE:FREQ=WEEKLY;BYDAY=FR"]. null for single events.
+  recurrence: string[] | null
+  recurringEventId: string | null
+  originalStartAt: string | null // ISO 8601
   color: string
   createdAt: string
   updatedAt: string
@@ -104,9 +111,13 @@ export interface CalendarEventInput {
   endAt: string // ISO 8601
   allDay: boolean
   timezone: string
-  recurrenceRule: string | null
+  recurrence: string[] | null
   color: string
 }
+
+// Which occurrences of a recurring event an edit or delete applies to,
+// matching Google Calendar's "This event / This and following / All events".
+export type RecurrenceScope = 'this' | 'following' | 'all'
 
 export type GoogleCalendarStatus =
   | { connected: false }

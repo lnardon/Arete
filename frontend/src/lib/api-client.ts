@@ -1,4 +1,4 @@
-import type { ActiveTimer, CalendarEvent, CalendarEventInput, Goal, GoalType, GoogleCalendarStatus, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
+import type { ActiveTimer, CalendarEvent, CalendarEventInput, Goal, GoalType, GoogleCalendarStatus, Habit, HabitCompletion, JournalEntry, PomodoroEntry, PomodoroProject, RecurrenceScope, WhatsAppLinkCode, WhatsAppStatus } from '@/lib/types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -22,6 +22,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (!res.ok) throw new ApiError(res.status)
   if (res.status === 204) return undefined as T
   return res.json()
+}
+
+function scopeQuery(scope?: RecurrenceScope): string {
+  return scope ? `?scope=${scope}` : ''
 }
 
 export const api = {
@@ -118,10 +122,11 @@ export const api = {
       request<CalendarEvent>(`/api/v1/calendar/events/${id}`),
     create: (event: CalendarEventInput) =>
       request<CalendarEvent>('/api/v1/calendar/events', { method: 'POST', body: JSON.stringify(event) }),
-    update: (id: string, event: CalendarEventInput) =>
-      request<CalendarEvent>(`/api/v1/calendar/events/${id}`, { method: 'PUT', body: JSON.stringify(event) }),
-    delete: (id: string) =>
-      request<void>(`/api/v1/calendar/events/${id}`, { method: 'DELETE' }),
+    // scope is required when id is an occurrence of a recurring event.
+    update: (id: string, event: CalendarEventInput, scope?: RecurrenceScope) =>
+      request<CalendarEvent>(`/api/v1/calendar/events/${id}${scopeQuery(scope)}`, { method: 'PUT', body: JSON.stringify(event) }),
+    delete: (id: string, scope?: RecurrenceScope) =>
+      request<void>(`/api/v1/calendar/events/${id}${scopeQuery(scope)}`, { method: 'DELETE' }),
   },
   google: {
     authUrl: () => request<{ authUrl: string }>('/api/v1/google/auth-url'),
