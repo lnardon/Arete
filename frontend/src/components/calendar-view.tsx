@@ -13,6 +13,7 @@ import {
   useUpdateCalendarEvent,
   useDeleteCalendarEvent,
 } from "@/hooks/use-calendar-events"
+import { useNow } from "@/hooks/use-now"
 import { addDays, getStartOfDay, getStartOfWeek } from "@/lib/date-utils"
 import type { CalendarEvent, CalendarEventInput, RecurrenceScope } from "@/lib/types"
 
@@ -35,6 +36,8 @@ export function CalendarView() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null)
   const [scopePrompt, setScopePrompt] = useState<ScopePrompt | null>(null)
+  const [scrollToNowSignal, setScrollToNowSignal] = useState(0)
+  const now = useNow()
 
   const rangeStart = viewMode === "day" ? getStartOfDay(selectedDate) : getStartOfWeek(selectedDate)
   const rangeEnd = viewMode === "day" ? addDays(rangeStart, 1) : addDays(rangeStart, 7)
@@ -54,6 +57,7 @@ export function CalendarView() {
 
   function handleToday() {
     setSelectedDate(new Date())
+    setScrollToNowSignal((n) => n + 1)
   }
 
   function handleCreate() {
@@ -138,6 +142,8 @@ export function CalendarView() {
                 <CalendarDayView
                   date={selectedDate}
                   events={events}
+                  now={now}
+                  scrollToNowSignal={scrollToNowSignal}
                   onSlotClick={handleSlotClick}
                   onEventClick={handleEventClick}
                 />
@@ -145,6 +151,8 @@ export function CalendarView() {
                 <CalendarWeekView
                   weekStart={rangeStart}
                   events={events}
+                  now={now}
+                  scrollToNowSignal={scrollToNowSignal}
                   onSlotClick={handleSlotClick}
                   onEventClick={handleEventClick}
                 />

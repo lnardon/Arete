@@ -2,23 +2,31 @@
 
 import { useRef, type MouseEvent } from "react"
 import type { CalendarEvent } from "@/lib/types"
-import { HOUR_HEIGHT, DAY_HEIGHT, layoutEventForDay } from "@/lib/calendar-layout"
+import { HOUR_HEIGHT, DAY_HEIGHT, isPastOnDay, layoutEventForDay } from "@/lib/calendar-layout"
 import { formatHourLabel, formatWeekdayLabel, addDays, getStartOfDay, isSameDay } from "@/lib/date-utils"
-import { CalendarEventItem } from "@/components/calendar-event-item"
-import { Repeat } from "lucide-react"
+import { CalendarAllDayChip, CalendarEventItem } from "@/components/calendar-event-item"
+import { CalendarNowIndicator } from "@/components/calendar-now-indicator"
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 interface CalendarWeekViewProps {
   weekStart: Date
   events: CalendarEvent[]
+  now: Date
+  scrollToNowSignal: number
   onSlotClick: (start: Date) => void
   onEventClick: (event: CalendarEvent) => void
 }
 
-export function CalendarWeekView({ weekStart, events, onSlotClick, onEventClick }: CalendarWeekViewProps) {
+export function CalendarWeekView({
+  weekStart,
+  events,
+  now,
+  scrollToNowSignal,
+  onSlotClick,
+  onEventClick,
+}: CalendarWeekViewProps) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  const today = new Date()
   const allDayEvents = events.filter((e) => e.allDay)
 
   return (
@@ -28,7 +36,7 @@ export function CalendarWeekView({ weekStart, events, onSlotClick, onEventClick 
         {days.map((day) => (
           <div key={day.toISOString()} className="flex-1 text-center">
             <p className="text-[11px] text-muted-foreground">{formatWeekdayLabel(day)}</p>
-            <p className={`text-sm font-medium ${isSameDay(day, today) ? "text-primary" : "text-foreground"}`}>
+            <p className={`text-sm font-medium ${isSameDay(day, now) ? "text-primary" : "text-foreground"}`}>
               {day.getDate()}
             </p>
           </div>
@@ -43,16 +51,13 @@ export function CalendarWeekView({ weekStart, events, onSlotClick, onEventClick 
               {allDayEvents
                 .filter((e) => layoutEventForDay(e, day) !== null)
                 .map((event) => (
-                  <button
+                  <CalendarAllDayChip
                     key={event.id}
-                    type="button"
-                    onClick={() => onEventClick(event)}
-                    className="rounded-md px-1.5 py-0.5 text-left text-[11px] text-white flex items-center gap-1 min-w-0"
-                    style={{ backgroundColor: event.color }}
-                  >
-                    {event.recurringEventId && <Repeat className="size-3 shrink-0" aria-label="Repeats" />}
-                    <span className="truncate">{event.title}</span>
-                  </button>
+                    event={event}
+                    past={isPastOnDay(event, day, now)}
+                    onClick={onEventClick}
+                    className="px-1.5 py-0.5 text-[11px]"
+                  />
                 ))}
             </div>
           ))}
@@ -77,6 +82,8 @@ export function CalendarWeekView({ weekStart, events, onSlotClick, onEventClick 
               key={day.toISOString()}
               day={day}
               events={events}
+              now={now}
+              scrollToNowSignal={scrollToNowSignal}
               onSlotClick={onSlotClick}
               onEventClick={onEventClick}
             />
@@ -90,11 +97,13 @@ export function CalendarWeekView({ weekStart, events, onSlotClick, onEventClick 
 interface DayColumnProps {
   day: Date
   events: CalendarEvent[]
+  now: Date
+  scrollToNowSignal: number
   onSlotClick: (start: Date) => void
   onEventClick: (event: CalendarEvent) => void
 }
 
-function DayColumn({ day, events, onSlotClick, onEventClick }: DayColumnProps) {
+function DayColumn({ day, events, now, scrollToNowSignal, onSlotClick, onEventClick }: DayColumnProps) {
   const gridRef = useRef<HTMLDivElement>(null)
   const positions = events
     .filter((e) => !e.allDay)
@@ -126,8 +135,16 @@ function DayColumn({ day, events, onSlotClick, onEventClick }: DayColumnProps) {
         />
       ))}
       {positions.map(({ event, top, height }) => (
-        <CalendarEventItem key={event.id} event={event} top={top} height={height} onClick={onEventClick} />
+        <CalendarEventItem
+          key={event.id}
+          event={event}
+          top={top}
+          height={height}
+          past={isPastOnDay(event, day, now)}
+          onClick={onEventClick}
+        />
       ))}
+      {isSameDay(day, now) && <CalendarNowIndicator now={now} scrollSignal={scrollToNowSignal} />}
     </div>
   )
 }

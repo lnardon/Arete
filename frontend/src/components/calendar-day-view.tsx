@@ -2,21 +2,30 @@
 
 import { useRef, type MouseEvent } from "react"
 import type { CalendarEvent } from "@/lib/types"
-import { HOUR_HEIGHT, DAY_HEIGHT, layoutEventForDay } from "@/lib/calendar-layout"
-import { formatHourLabel, getStartOfDay } from "@/lib/date-utils"
-import { CalendarEventItem } from "@/components/calendar-event-item"
-import { Repeat } from "lucide-react"
+import { HOUR_HEIGHT, DAY_HEIGHT, isPastOnDay, layoutEventForDay } from "@/lib/calendar-layout"
+import { formatHourLabel, getStartOfDay, isSameDay } from "@/lib/date-utils"
+import { CalendarAllDayChip, CalendarEventItem } from "@/components/calendar-event-item"
+import { CalendarNowIndicator } from "@/components/calendar-now-indicator"
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 interface CalendarDayViewProps {
   date: Date
   events: CalendarEvent[]
+  now: Date
+  scrollToNowSignal: number
   onSlotClick: (start: Date) => void
   onEventClick: (event: CalendarEvent) => void
 }
 
-export function CalendarDayView({ date, events, onSlotClick, onEventClick }: CalendarDayViewProps) {
+export function CalendarDayView({
+  date,
+  events,
+  now,
+  scrollToNowSignal,
+  onSlotClick,
+  onEventClick,
+}: CalendarDayViewProps) {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const allDayEvents = events.filter((e) => e.allDay)
@@ -42,16 +51,13 @@ export function CalendarDayView({ date, events, onSlotClick, onEventClick }: Cal
           <div className="w-14 shrink-0" />
           <div className="flex-1 flex flex-col gap-1">
             {allDayEvents.map((event) => (
-              <button
+              <CalendarAllDayChip
                 key={event.id}
-                type="button"
-                onClick={() => onEventClick(event)}
-                className="rounded-md px-2 py-1 text-left text-xs text-white flex items-center gap-1 min-w-0"
-                style={{ backgroundColor: event.color }}
-              >
-                {event.recurringEventId && <Repeat className="size-3 shrink-0" aria-label="Repeats" />}
-                <span className="truncate">{event.title}</span>
-              </button>
+                event={event}
+                past={isPastOnDay(event, date, now)}
+                onClick={onEventClick}
+                className="px-2 py-1 text-xs"
+              />
             ))}
           </div>
         </div>
@@ -82,8 +88,16 @@ export function CalendarDayView({ date, events, onSlotClick, onEventClick }: Cal
             />
           ))}
           {timedPositions.map(({ event, top, height }) => (
-            <CalendarEventItem key={event.id} event={event} top={top} height={height} onClick={onEventClick} />
+            <CalendarEventItem
+              key={event.id}
+              event={event}
+              top={top}
+              height={height}
+              past={isPastOnDay(event, date, now)}
+              onClick={onEventClick}
+            />
           ))}
+          {isSameDay(date, now) && <CalendarNowIndicator now={now} scrollSignal={scrollToNowSignal} />}
         </div>
       </div>
     </div>
