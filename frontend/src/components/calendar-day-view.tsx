@@ -1,9 +1,10 @@
 "use client"
 
-import { useRef, type MouseEvent } from "react"
+import { useRef, type MouseEvent, type RefObject } from "react"
 import type { CalendarEvent } from "@/lib/types"
 import { HOUR_HEIGHT, DAY_HEIGHT, isPastOnDay, layoutEventForDay } from "@/lib/calendar-layout"
 import { formatHourLabel, getStartOfDay, isSameDay } from "@/lib/date-utils"
+import { cn } from "@/lib/utils"
 import { CalendarAllDayChip, CalendarEventItem } from "@/components/calendar-event-item"
 import { CalendarNowIndicator } from "@/components/calendar-now-indicator"
 
@@ -14,8 +15,10 @@ interface CalendarDayViewProps {
   events: CalendarEvent[]
   now: Date
   scrollToNowSignal: number
-  onSlotClick: (start: Date) => void
+  // Left out to make the grid read-only: empty slots aren't clickable.
+  onSlotClick?: (start: Date) => void
   onEventClick: (event: CalendarEvent) => void
+  scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
 export function CalendarDayView({
@@ -25,6 +28,7 @@ export function CalendarDayView({
   scrollToNowSignal,
   onSlotClick,
   onEventClick,
+  scrollContainerRef,
 }: CalendarDayViewProps) {
   const gridRef = useRef<HTMLDivElement>(null)
 
@@ -36,7 +40,7 @@ export function CalendarDayView({
 
   function handleGridClick(e: MouseEvent<HTMLDivElement>) {
     const rect = gridRef.current?.getBoundingClientRect()
-    if (!rect) return
+    if (!rect || !onSlotClick) return
     const offsetY = e.clientY - rect.top
     const hour = Math.max(0, Math.min(23, Math.floor(offsetY / HOUR_HEIGHT)))
     const start = getStartOfDay(date)
@@ -77,7 +81,7 @@ export function CalendarDayView({
         <div
           ref={gridRef}
           onClick={handleGridClick}
-          className="relative flex-1 border-l border-border cursor-pointer"
+          className={cn("relative flex-1 border-l border-border", onSlotClick && "cursor-pointer")}
           style={{ height: DAY_HEIGHT }}
         >
           {HOURS.map((hour) => (
@@ -97,7 +101,13 @@ export function CalendarDayView({
               onClick={onEventClick}
             />
           ))}
-          {isSameDay(date, now) && <CalendarNowIndicator now={now} scrollSignal={scrollToNowSignal} />}
+          {isSameDay(date, now) && (
+            <CalendarNowIndicator
+              now={now}
+              scrollSignal={scrollToNowSignal}
+              scrollContainerRef={scrollContainerRef}
+            />
+          )}
         </div>
       </div>
     </div>

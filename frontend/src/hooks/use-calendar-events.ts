@@ -4,10 +4,11 @@ import { api } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import type { CalendarEventInput, RecurrenceScope } from '@/lib/types'
 
-export function useCalendarEvents(start: string, end: string) {
+export function useCalendarEvents(start: string, end: string, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.calendarEvents.list(start, end),
     queryFn: () => api.calendarEvents.list(start, end),
+    ...options,
   })
 }
 

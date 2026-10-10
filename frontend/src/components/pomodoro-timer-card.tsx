@@ -14,18 +14,11 @@ import {
 } from "@/components/ui/select"
 import { useActiveTimer, useProjects, useStartTimer, useStopTimer } from "@/hooks/use-pomodoro"
 import { formatLocalDate } from "@/lib/date-utils"
+import { formatClock, getRemainingSeconds } from "@/lib/pomodoro"
 import { cn } from "@/lib/utils"
 
 const PRESETS = [25, 50]
 const NO_PROJECT = "none"
-
-function formatClock(totalSeconds: number): string {
-  const sign = totalSeconds < 0 ? "+" : ""
-  const abs = Math.abs(totalSeconds)
-  const m = Math.floor(abs / 60)
-  const s = abs % 60
-  return `${sign}${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-}
 
 export function PomodoroTimerCard() {
   const { data: active } = useActiveTimer()
@@ -48,10 +41,7 @@ export function PomodoroTimerCard() {
 
   const remainingSeconds = useMemo(() => {
     if (isActive) {
-      const entry = active.entry
-      const startedMs = new Date(entry.startedAt).getTime()
-      const totalMs = entry.plannedMinutes * 60_000
-      return Math.round((startedMs + totalMs - now) / 1000)
+      return getRemainingSeconds(active.entry, now)
     }
     const minutes = customMinutes.trim() ? Number(customMinutes) : plannedMinutes
     return (Number.isFinite(minutes) ? minutes : 0) * 60

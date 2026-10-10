@@ -105,7 +105,7 @@ function GoalTabPanel({ periodType }: { periodType: GoalPeriodType }) {
             <GoalItem
               key={goal.id}
               goal={goal}
-              onToggle={(id) => toggleGoal.mutate({ id })}
+              onToggle={(id) => toggleGoal.mutate({ id, periodType, periodKey })}
               onAddProgress={(id) => addGoalProgress.mutate({ id, delta: 1 })}
               progressPending={addGoalProgress.isPending && addGoalProgress.variables?.id === goal.id}
               onDelete={(id) => deleteGoal.mutate(id)}

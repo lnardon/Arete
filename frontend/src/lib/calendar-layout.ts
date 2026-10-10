@@ -54,3 +54,41 @@ export function timeRangeLabel(event: CalendarEvent): string {
   const fmt = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   return `${fmt(new Date(event.startAt))} – ${fmt(new Date(event.endAt))}`
 }
+
+export interface UpNext {
+  current: CalendarEvent | null // in-progress timed event ending soonest
+  currentExtra: number // other timed events in progress
+  next: CalendarEvent | null // first timed event starting after now
+  nextExtra: number // others starting at the same instant as `next`
+}
+
+// Where the day stands relative to `now`, for the dashboard's "Up next"
+// strip. All-day events are left out: they have no start time to count
+// down to.
+export function getUpNext(events: CalendarEvent[], now: Date): UpNext {
+  const timed = events.filter((e) => !e.allDay)
+  const inProgress = timed
+    .filter((e) => new Date(e.startAt) <= now && now < new Date(e.endAt))
+    .sort((a, b) => new Date(a.endAt).getTime() - new Date(b.endAt).getTime())
+  const upcoming = timed
+    .filter((e) => new Date(e.startAt) > now)
+    .sort(
+      (a, b) =>
+        new Date(a.startAt).getTime() - new Date(b.startAt).getTime() || a.title.localeCompare(b.title)
+    )
+
+  const next = upcoming[0] ?? null
+  const nextStart = next ? new Date(next.startAt).getTime() : null
+
+  return {
+    current: inProgress[0] ?? null,
+    currentExtra: Math.max(0, inProgress.length - 1),
+    next,
+    nextExtra: upcoming.filter((e) => new Date(e.startAt).getTime() === nextStart).length - (next ? 1 : 0),
+  }
+}
+
+// Timed events that haven't ended yet, including the ones in progress.
+export function countEventsLeft(events: CalendarEvent[], now: Date): number {
+  return events.filter((e) => !e.allDay && new Date(e.endAt) > now).length
+}

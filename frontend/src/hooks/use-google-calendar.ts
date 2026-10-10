@@ -3,10 +3,15 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 
-export function useGoogleCalendarStatus() {
+// The server pulls from Google every GOOGLE_SYNC_INTERVAL_MINUTES (5 by
+// default); views that stay open refetch on the same cadence to pick it up.
+export const GOOGLE_SYNC_REFRESH_MS = 5 * 60_000
+
+export function useGoogleCalendarStatus(options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.googleCalendar.status(),
     queryFn: () => api.google.status(),
+    ...options,
   })
 }
 

@@ -6,10 +6,9 @@ export function formatLocalDate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
-export function getCurrentPeriodKey(type: 'month' | 'quarter' | 'semester' | 'year'): string {
-  const now = new Date()
-  const y = now.getFullYear()
-  const mo = now.getMonth() + 1 // 1-12
+export function getCurrentPeriodKey(type: 'month' | 'quarter' | 'semester' | 'year', date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const mo = date.getMonth() + 1 // 1-12
 
   if (type === 'month') {
     return `${y}-${String(mo).padStart(2, '0')}`
@@ -116,4 +115,28 @@ export function formatPeriodLabel(type: 'month' | 'quarter' | 'semester' | 'year
   }
 
   return key // year
+}
+
+const MINUTE_MS = 60_000
+
+// Compact duration for countdowns, e.g. "18 min", "1 h 5 min", "2 h".
+// Rounds to the nearest minute and never goes below 1 min.
+export function formatDurationShort(ms: number): string {
+  const totalMinutes = Math.max(1, Math.round(ms / MINUTE_MS))
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  if (h === 0) return `${m} min`
+  return m === 0 ? `${h} h` : `${h} h ${m} min`
+}
+
+// How long ago `iso` was, e.g. "just now", "5 min ago", "3 h ago"; anything
+// older than a day falls back to the date ("Oct 8").
+export function formatTimeAgo(iso: string, now: Date): string {
+  const then = new Date(iso)
+  const minutes = Math.floor((now.getTime() - then.getTime()) / MINUTE_MS)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} h ago`
+  return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }

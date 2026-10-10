@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
-import type { GoalType } from '@/lib/types'
+import type { Goal, GoalType } from '@/lib/types'
 
 export function useGoals(periodType: string, periodKey: string) {
   return useQuery({
@@ -34,13 +34,29 @@ export function useCreateGoal() {
   })
 }
 
+// Flips the goal in its period's list right away, so a checkbox responds
+// without waiting on the round-trip; rolled back if the request fails.
 export function useToggleGoal() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id }: { id: string }) => api.goals.toggle(id),
+    mutationFn: ({ id }: { id: string; periodType: string; periodKey: string }) => api.goals.toggle(id),
+    onMutate: async ({ id, periodType, periodKey }) => {
+      const key = queryKeys.goals.list(periodType, periodKey)
+      await queryClient.cancelQueries({ queryKey: key })
+      const prev = queryClient.getQueryData<Goal[]>(key)
+      queryClient.setQueryData<Goal[]>(key, (old) =>
+        old?.map((g) => (g.id === id ? { ...g, completed: !g.completed } : g))
+      )
+      return { prev }
+    },
+    onError: (_err, { periodType, periodKey }, ctx) => {
+      queryClient.setQueryData(queryKeys.goals.list(periodType, periodKey), ctx?.prev)
+    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.goals.list(data.periodType, data.periodKey) })
       toast.success(data.completed ? 'Goal completed!' : 'Goal uncompleted')
+    },
+    onSettled: (_data, _err, { periodType, periodKey }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.goals.list(periodType, periodKey) })
     },
   })
 }

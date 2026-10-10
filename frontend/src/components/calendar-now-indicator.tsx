@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, type RefObject } from "react"
 import { offsetInDay } from "@/lib/calendar-layout"
 
 interface CalendarNowIndicatorProps {
@@ -8,17 +8,30 @@ interface CalendarNowIndicatorProps {
   // Bumped by the "Today" button so the view re-centers on the line even when
   // it's already showing today (and the indicator doesn't remount).
   scrollSignal: number
+  // When the grid scrolls inside its own box (the dashboard card), only that
+  // box is scrolled. Without it the line is scrolled into view page-wide.
+  scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
-export function CalendarNowIndicator({ now, scrollSignal }: CalendarNowIndicatorProps) {
+export function CalendarNowIndicator({ now, scrollSignal, scrollContainerRef }: CalendarNowIndicatorProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   // Centers the line on mount (opening the calendar, switching views, coming
   // back to today) but not on the per-minute ticks, so it never fights the
   // user's own scrolling.
   useEffect(() => {
-    ref.current?.scrollIntoView({ block: "center", inline: "nearest" })
-  }, [scrollSignal])
+    const el = ref.current
+    if (!el) return
+    const container = scrollContainerRef?.current
+    if (!container) {
+      el.scrollIntoView({ block: "center", inline: "nearest" })
+      return
+    }
+    // scrollIntoView would also scroll every scrollable ancestor (the page
+    // itself), so move just the container.
+    const delta = el.getBoundingClientRect().top - container.getBoundingClientRect().top
+    container.scrollBy({ top: delta - container.clientHeight / 2 })
+  }, [scrollSignal, scrollContainerRef])
 
   return (
     <div
